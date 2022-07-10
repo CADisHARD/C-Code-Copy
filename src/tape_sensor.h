@@ -1,9 +1,9 @@
 #ifndef TAPE_SENSOR_H
 #define TAPE_SENSOR_H
 
-#include <Wire.h>
-#include <Adafruit_SSD1306.h>
-#include "driving_motors.h"
+#include "driving_motor.h"
+#include "stdint.h"
+#include "Arduino.h"
 
 class TapeSensors{
 
