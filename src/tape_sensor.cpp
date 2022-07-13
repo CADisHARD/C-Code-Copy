@@ -1,5 +1,5 @@
 #include "tape_sensor.h"
-#include "driving_motor.h"
+#include "encoder_motor.h"
 
 
 TapeSensors::TapeSensors(int thresh){
@@ -24,15 +24,15 @@ const char *TapeSensors::routine(){
 
     if(L_val<=threshold){
         message="Left sensor is off the tape.";
-        turn_right(); 
+        //turn_right(); 
     }
     else if(R_val<=threshold){
         message="Right sensor is off the tape.";
-        turn_left();
+        //turn_left();
     }
     else if(M_val<=threshold){
         message="Middle sensor is off the tape.";
-        stop();
+        //stop();
     }
 
     return message;

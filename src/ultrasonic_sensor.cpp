@@ -1,7 +1,7 @@
 #include "ultrasonic_sensor.h"
 #include "stdint.h"
 #include "Arduino.h"
-#include "driving_motor.h"
+#include "encoder_motor.h"
 
 UltrasonicSensor::UltrasonicSensor(uint32_t trigger,uint32_t echo){
 
@@ -89,11 +89,11 @@ const char *edge_detection(int thresh, const char *unit){
     if(left==1){
 
         message="edge detected!";
-        turn_right();
+        //turn_right();
     }    
     else if(right==1){
         message="edge detected!";
-        turn_left();
+        //turn_left();
     }
     else{
         message="nothing detected!";

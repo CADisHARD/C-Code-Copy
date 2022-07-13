@@ -1,7 +1,7 @@
 #ifndef TAPE_SENSOR_H
 #define TAPE_SENSOR_H
 
-#include "driving_motor.h"
+#include "encoder_motor.h"
 #include "stdint.h"
 #include "Arduino.h"
 
