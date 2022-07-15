@@ -2,7 +2,6 @@
 #include <Adafruit_SSD1306.h>
 #include "tape_sensor.h"
 #include "ultrasonic_sensor.h"
-#include "wheels.h"
 
 //DECLARE OLED
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
@@ -23,7 +22,7 @@ int distance;
 #define echoPin PA10
 
 
-//DECLARE MOTORS
+//********************DECLARE MOTORS**************************
 
 //RIGHT MOTOR
 #define ENCA_R PB3
@@ -51,6 +50,7 @@ EncoderMotor left_motor(ENCA_L, ENCB_L, PWM1_L, PWM2_L);
 #define KDKNOB PA4
 
 void right_motor_encoder_wrapper();
+void left_motor_encoder_wrapper();
 
 void right_motor_encoder_wrapper(){
   right_motor.read_encoder();
@@ -60,8 +60,8 @@ void left_motor_encoder_wrapper(){
   left_motor.read_encoder();
 }
 
-  int speed_right=3000;
-  int speed_left=3000;
+int speed_right=3000;
+int speed_left=3000;
 
 
 void setup() {
@@ -77,9 +77,12 @@ void setup() {
   pinMode(KIKNOB, INPUT);
   pinMode(KDKNOB, INPUT);
 
+  //setup motors
+
   attachInterrupt(digitalPinToInterrupt(ENCA_R),right_motor_encoder_wrapper,RISING);
   attachInterrupt(digitalPinToInterrupt(ENCA_L),left_motor_encoder_wrapper,RISING);
 
+  // setup tape sensors
   tpsens.initial_reading();
 
   delay(2000);
@@ -122,26 +125,26 @@ void loop() {
   int R_val=tpsens.get_norm_R_val();
 
   display.println("Left normalized: ");
-  display.print(L_val);
+  display.println(L_val);
   display.println("Middle normalized: ");
-  display.print(M_val);
+  display.println(M_val);
   display.println("Right normalized: ");
-  display.print(R_val);
+  display.println(R_val);
 
   display.println("Position type: ");
-  display.print(message2);
+  display.println(message2);
 
   display.println("Current position value: ");
-  display.print(tpsens.position);
+  display.println(tpsens.position);
 
   display.println("Prev position value: ");
-  display.print(tpsens.last_position);
+  display.println(tpsens.last_position);
 
     display.println("Current error value: ");
-  display.print(tpsens.error);
+  display.println(tpsens.error);
 
   display.println("Prev error value: ");
-  display.print(tpsens.last_error);
+  display.println(tpsens.last_error);
 
   int *new_motor_speeds=tpsens.follow_tape_speed_correction(speed_right, speed_left);
 
