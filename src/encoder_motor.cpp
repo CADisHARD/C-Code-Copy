@@ -1,5 +1,6 @@
 #include "encoder_motor.h"
 
+
 void pwm_start(PinName pin, uint32_t clock_freq, uint32_t value, TimerCompareFormat_t resolution);
 
 
@@ -61,7 +62,7 @@ void EncoderMotor::read_encoder(){
 
 void EncoderMotor::go_to_position(int pos){
 
-    
+
 
 
 }

@@ -3,7 +3,6 @@
 
 #include "Arduino.h"
 
-
 class EncoderMotor{
 
     private:
@@ -22,11 +21,12 @@ class EncoderMotor{
 
         
         
+        
 
     public:
 
         EncoderMotor();
-        
+    
         EncoderMotor(uint32_t ENCA,uint32_t ENCB, PinName PWM1, PinName PWM2);
         int get_position(){return position;}
         int get_pwm(){return PWM_value;}
@@ -38,10 +38,8 @@ class EncoderMotor{
         void go();
         void stop();
         void read_encoder();
-        void go_to_position(int pos);
-        
+        void go_to_position(int pos);      
 };
-
 
 
 

@@ -1,45 +1,200 @@
 #include "tape_sensor.h"
-#include "encoder_motor.h"
 
 
-TapeSensors::TapeSensors(int thresh){
-    set_threshold(thresh);
+TapeSensors::TapeSensors(){
     pinMode(REFLECTANCE_L, INPUT);
     pinMode(REFLECTANCE_M, INPUT);
     pinMode(REFLECTANCE_R, INPUT);
 }
 
-void TapeSensors::set_threshold(int thresh){
 
-    threshold=thresh;
+void TapeSensors::initial_reading(){
+
+    int L=analogRead(REFLECTANCE_L);
+    int M=analogRead(REFLECTANCE_M);
+    int R=analogRead(REFLECTANCE_R);
+
+
+    previous_sensor_values[0]=get_norm_L_val();
+    previous_sensor_values[1]=get_norm_M_val();
+    previous_sensor_values[2]=get_norm_R_val();
+
+    get_error();
+
+
 }
 
-const char *TapeSensors::routine(){
 
-    const char *message="All sensors are on the tape.";
+void TapeSensors::read_tape(){
+
+    raw_L_val=analogRead(REFLECTANCE_L);
+    raw_M_val =analogRead(REFLECTANCE_M);
+    raw_R_val=analogRead(REFLECTANCE_R);
+
+    current_sensor_values[0]=get_norm_L_val();
+    current_sensor_values[1]=get_norm_M_val();
+    current_sensor_values[2]=get_norm_R_val();
+
+    get_error();
+
+}
+
+
+const char *TapeSensors::get_error(){
+
+    const char *message="blank";
+
+    int prev_L=previous_sensor_values[0];
+    int prev_M=previous_sensor_values[1];
+    int prev_R=previous_sensor_values[2];
     
-    L_val=analogRead(REFLECTANCE_L);
-    M_val =analogRead(REFLECTANCE_M);
-    R_val=analogRead(REFLECTANCE_R);
+    int curr_L=current_sensor_values[0];
+    int curr_M=current_sensor_values[1];
+    int curr_R=current_sensor_values[2];
 
-    if(L_val<=threshold){
-        message="Left sensor is off the tape.";
-        //turn_right(); 
+
+    if(curr_L==0 && curr_M==1 && curr_R==0){
+        message="on target";
+        prev_message_000="whatever";
+        position = 3;
+        error=IDEAL_POSITION-position;
     }
-    else if(R_val<=threshold){
-        message="Right sensor is off the tape.";
-        //turn_left();
+    
+    else if(curr_L==1 && curr_M==1 && curr_R==0){
+        message="slight right";
+        prev_message_000="whatever";
+        position = 2;
+        error=IDEAL_POSITION-position;
     }
-    else if(M_val<=threshold){
-        message="Middle sensor is off the tape.";
-        //stop();
+    else if(curr_L==1 && curr_M==0 && curr_R==0){
+        message="medium right";
+        prev_message_000="whatever";
+        position = 1;
+        error=IDEAL_POSITION-position;
     }
+    else if(curr_L==0 && curr_M==1 && curr_R==1){
+        message="slight left";
+        prev_message_000="whatever";
+        position = 4;
+        error=IDEAL_POSITION-position;
+
+    }
+    else if(curr_L==0 && curr_M==0 && curr_R==1){
+        message="medium left";
+        prev_message_000="whatever";
+        position = 5;
+        error=IDEAL_POSITION-position;
+    }
+
+    else if(curr_L==0 && curr_M==0 && curr_R==0){
+
+        if(prev_L==1){
+            message="big right";
+            prev_message_000=message;
+            position = 0;
+            last_position=position;
+            error=IDEAL_POSITION-position;
+            
+        }
+        else if(prev_R==1){
+            message="big left";
+            prev_message_000=message;
+            position = 6;
+            last_position=position;
+            error=IDEAL_POSITION-position;
+        }
+        else if(curr_L==0 && curr_M==0 && curr_R==0){
+            message=prev_message_000;
+            if(last_position==0){
+                position = 0;
+                error=IDEAL_POSITION-position;
+            }
+            else if(last_position==6){
+                position = 6;
+                error=IDEAL_POSITION-position;
+            }
+        }
+
+    }
+
+
+    previous_sensor_values[0]=current_sensor_values[0];
+    previous_sensor_values[1]=current_sensor_values[1];
+    previous_sensor_values[2]=current_sensor_values[2];
+
 
     return message;
 }
 
 
+int TapeSensors::get_norm_L_val(){
+   
+   if(raw_L_val<45){
+    normalized_L_val=0; //off the tape
+   }
+   else if(raw_L_val>=90){
+    normalized_L_val=1; //on the tape
+   }
 
+   return normalized_L_val;
+
+}
+int TapeSensors::get_norm_M_val(){
+
+    if(raw_M_val<80){
+    normalized_M_val=0; //off the tape
+   }
+   else if(raw_M_val>=80){
+    normalized_M_val=1; //on the tape
+   }
+
+   return normalized_M_val;
+
+}
+int TapeSensors::get_norm_R_val(){
+
+    if(raw_R_val<45){
+    normalized_R_val=0; //off the tape
+   }
+   else if(raw_R_val>=70){
+    normalized_R_val=1; //on the tape
+   }
+
+   return normalized_R_val;
+
+}
+
+
+int *TapeSensors::follow_tape_speed_correction(int basespeeda, int basespeedb){
+    int speeds[2];
+    get_error();
+    P = error;
+    I = I + error;
+    D = error - last_error;
+    last_error = error;
+    int motorspeed = P*kp + I*ki + D*kd;
+    
+    int motorspeeda = basespeeda + motorspeed;
+    int motorspeedb = basespeedb - motorspeed;
+    
+    if (motorspeeda > MAX_TAPE_FOLLOWING_PWM) {
+        motorspeeda = MAX_TAPE_FOLLOWING_PWM;
+    }
+    if (motorspeedb > MAX_TAPE_FOLLOWING_PWM) {
+        motorspeedb = MAX_TAPE_FOLLOWING_PWM;
+    }
+    if (motorspeeda < 0) {
+        motorspeeda = 0;
+    }
+    if (motorspeedb < 0) {
+        motorspeedb = 0;
+    }
+
+    speeds[0]=motorspeeda;
+    speeds[1]=motorspeedb;
+
+    return speeds; 
+}
 
 
 
