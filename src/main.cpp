@@ -2,6 +2,7 @@
 #include <Adafruit_SSD1306.h>
 #include "tape_sensor.h"
 #include "ultrasonic_sensor.h"
+#include "encoder_motor.h"
 
 //DECLARE OLED
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
