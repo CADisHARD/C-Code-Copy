@@ -165,35 +165,17 @@ int TapeSensors::get_norm_R_val(){
 }
 
 
-int *TapeSensors::follow_tape_speed_correction(int basespeeda, int basespeedb){
-    int speeds[2];
+float TapeSensors::follow_tape_speed_correction(){
+
     get_error();
-    P = error;
-    I = I + error;
-    D = error - last_error;
+    P = (float)error;
+    I = I + (float)error;
+    D = (float)error - (float)last_error;
     last_error = error;
-    int motorspeed = P*kp + I*ki + D*kd;
-    
-    int motorspeeda = basespeeda + motorspeed;
-    int motorspeedb = basespeedb - motorspeed;
-    
-    if (motorspeeda > MAX_TAPE_FOLLOWING_PWM) {
-        motorspeeda = MAX_TAPE_FOLLOWING_PWM;
-    }
-    if (motorspeedb > MAX_TAPE_FOLLOWING_PWM) {
-        motorspeedb = MAX_TAPE_FOLLOWING_PWM;
-    }
-    if (motorspeeda < 0) {
-        motorspeeda = 0;
-    }
-    if (motorspeedb < 0) {
-        motorspeedb = 0;
-    }
+    float motorspeed = P*kp + I*ki + D*kd;
 
-    speeds[0]=motorspeeda;
-    speeds[1]=motorspeedb;
+    return motorspeed;
 
-    return speeds; 
 }
 
 

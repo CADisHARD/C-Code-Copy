@@ -42,13 +42,10 @@ EncoderMotor right_motor(ENCA_R, ENCB_R, PWM1_R, PWM2_R);
 
 EncoderMotor left_motor(ENCA_L, ENCB_L, PWM1_L, PWM2_L);
 
-#define FORWARD 1
-#define BACKWARD -1
 
-
-#define KPKNOB PB1
-#define KIKNOB PB0
-#define KDKNOB PA4
+#define KPKNOB PA5
+#define KIKNOB PA6
+#define KDKNOB PA7
 
 void right_motor_encoder_wrapper();
 void left_motor_encoder_wrapper();
@@ -61,8 +58,15 @@ void left_motor_encoder_wrapper(){
   left_motor.read_encoder();
 }
 
-int speed_right=3000;
-int speed_left=3000;
+
+#define FORWARD 1
+#define BACKWARD -1
+
+#define INITIAL_TAPE_SPEED 3000.0
+#define MAXIMUM_TAPE_SPEED 6000.0
+
+float speed_right=INITIAL_TAPE_SPEED;
+float speed_left=INITIAL_TAPE_SPEED;
 
 
 void setup() {
@@ -78,12 +82,12 @@ void setup() {
   pinMode(KIKNOB, INPUT);
   pinMode(KDKNOB, INPUT);
 
-  //setup motors
+  //Setup Motors
 
   attachInterrupt(digitalPinToInterrupt(ENCA_R),right_motor_encoder_wrapper,RISING);
   attachInterrupt(digitalPinToInterrupt(ENCA_L),left_motor_encoder_wrapper,RISING);
 
-  // setup tape sensors
+  //Setup Tape Sensors
   tpsens.initial_reading();
 
   delay(2000);
@@ -96,27 +100,16 @@ void loop() {
   display.clearDisplay();
   display.setCursor(0,0);
   
-  //STAGE 1: Tape-following
+  //Tape Following
 
-  /*tpsens.kp = analogRead(KPKNOB);
-  tpsens.ki = analogRead(KIKNOB);
-  tpsens.kd = analogRead(KDKNOB);
-
-  display.println(tpsens.kp);
-  display.println(tpsens.ki);
-  display.println(tpsens.kd);*/
-  
-
-  //TAPE FOLLOWING
-
-  /*right_motor.set_direction(FORWARD);
+  right_motor.set_direction(FORWARD);
   left_motor.set_direction(FORWARD);
 
   right_motor.set_pwm(speed_right);
   left_motor.set_pwm(speed_left);
 
   right_motor.go();
-  left_motor.go();*/
+  left_motor.go();
 
   tpsens.read_tape();
 
@@ -125,36 +118,66 @@ void loop() {
   int M_val = tpsens.get_norm_M_val();
   int R_val=tpsens.get_norm_R_val();
 
-  display.println("Left normalized: ");
   display.println(L_val);
-  display.println("Middle normalized: ");
   display.println(M_val);
-  display.println("Right normalized: ");
   display.println(R_val);
 
-  display.println("Position type: ");
-  display.println(message2);
-
-  display.println("Current position value: ");
   display.println(tpsens.position);
-
-  display.println("Prev position value: ");
-  display.println(tpsens.last_position);
-
-    display.println("Current error value: ");
   display.println(tpsens.error);
 
-  display.println("Prev error value: ");
-  display.println(tpsens.last_error);
+  float speed_diff=tpsens.follow_tape_speed_correction();
+  speed_check(speed_diff);
 
-  int *new_motor_speeds=tpsens.follow_tape_speed_correction(speed_right, speed_left);
 
-  speed_right=new_motor_speeds[0];
-  speed_left=new_motor_speeds[1];
+  float kpval=analogRead(KPKNOB)/100.0;
+  float kival = analogRead(KIKNOB)/100.0;
+  float kdval = analogRead(KDKNOB)/100.0;
+
+  tpsens.kp=kpval;
+  tpsens.ki=kival;
+  tpsens.kd=kdval;
+
+  //display.println(kpval);
+  //display.println(kival);
+  //display.println(kdval);
+
+  display.println(speed_right);
+  display.println(speed_left);
+  display.println(speed_diff);
   
   display.display();
   delay(200);
   
 }
 
+void speed_check(float speed_diff){
 
+    if(speed_diff==0){
+      speed_right=INITIAL_TAPE_SPEED;
+      speed_left=INITIAL_TAPE_SPEED;
+    }
+
+    /*if(speed_diff>=0){
+      speed_right=speed_right-(speed_diff/10.0);
+    }
+    else if(speed_diff<0){
+      speed_right=speed_right-(speed_diff*10.0);
+    }*/
+
+    //speed_right=speed_right-speed_diff*0.05;
+    speed_left=speed_left+speed_diff;
+
+    if(speed_right>MAXIMUM_TAPE_SPEED){
+      speed_right=MAXIMUM_TAPE_SPEED;
+    }
+    if(speed_left>MAXIMUM_TAPE_SPEED){
+      speed_left=MAXIMUM_TAPE_SPEED;
+    }
+    if(speed_right<0){
+      speed_right=0;
+    }
+    if(speed_left<0){
+      speed_left=0;
+    }
+
+}

@@ -25,21 +25,20 @@ class TapeSensors{
 
         int MAX_TAPE_FOLLOWING_PWM=6000;
         int IDEAL_POSITION=3;
-        int P=0;
-        int I=0;
-        int D=0;
-        
 
+        
         const char *prev_message_000="hello";
-        
-        
         
     public:
 
         //temporary for debugging only
-        int kp=0.01;
-        int kd = 0.25;
-        int ki=2;
+
+        float P=0;
+        float I=0;
+        float D=0;
+        float kp=2;
+        float ki=0.0005;
+        float kd = 2;
         int position=0;
         int error=0;
         int last_error=0;
@@ -53,7 +52,7 @@ class TapeSensors{
         void initial_reading();
 
         const char *get_error();
-        int *follow_tape_speed_correction(int basespeeda, int basespeedb);
+        float follow_tape_speed_correction();
         
 
 };
