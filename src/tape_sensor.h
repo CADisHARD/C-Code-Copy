@@ -36,9 +36,9 @@ class TapeSensors{
         float P=0;
         float I=0;
         float D=0;
-        float kp=2;
+        float kp=4;
         float ki=0.0005;
-        float kd = 2;
+        float kd = 90;
         int position=0;
         int error=0;
         int last_error=0;

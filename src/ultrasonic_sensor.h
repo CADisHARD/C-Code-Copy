@@ -35,7 +35,7 @@ class UltrasonicSensor{
 
 };
 
-const char *edge_detection(int thresh, const char *unit);
+const char *edge_detection(UltrasonicSensor left_sensor, UltrasonicSensor right_sensor, int thresh, const char *unit);
 
 
 #endif

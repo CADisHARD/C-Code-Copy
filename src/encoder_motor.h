@@ -1,5 +1,5 @@
-#ifndef DRIVING_MOTORS_H
-#define DRIVING_MOTORS_H
+#ifndef ENCODER_MOTOR_H
+#define ENCODER_MOTOR_H
 
 #include "Arduino.h"
 
@@ -15,11 +15,14 @@ class EncoderMotor{
         
         int motor_freq=1000;
         
-        int position = 0;
+       
         int PWM_value=2000;
         int direction = 1;
 
         
+
+        int POSITIONS_PER_ROTATION = 145;   
+        int WHEEL_DIAMETER = 2.6;     
         
         
 
@@ -38,8 +41,12 @@ class EncoderMotor{
         void go();
         void stop();
         void read_encoder();
-        void go_to_position(int pos);      
+        void turn(int degrees, int dir);
+        void go_distance(float distance, int dir);
+        void go_to_position(int pos); 
+        int position = 0;
 };
+
 
 
 

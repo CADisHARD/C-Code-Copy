@@ -86,6 +86,8 @@ const char *TapeSensors::get_error(){
         error=IDEAL_POSITION-position;
     }
 
+    
+
     else if(curr_L==0 && curr_M==0 && curr_R==0){
 
         if(prev_L==1){
@@ -166,13 +168,13 @@ int TapeSensors::get_norm_R_val(){
 
 
 float TapeSensors::follow_tape_speed_correction(){
-
+    float motorspeed=0;
     get_error();
     P = (float)error;
     I = I + (float)error;
     D = (float)error - (float)last_error;
     last_error = error;
-    float motorspeed = P*kp + I*ki + D*kd;
+    motorspeed = P*kp + I*ki + D*kd;
 
     return motorspeed;
 

@@ -8,7 +8,7 @@ UltrasonicSensor::UltrasonicSensor(uint32_t trigger,uint32_t echo){
     TRIGGER=trigger;
     ECHO=echo;
     pinMode(TRIGGER, OUTPUT);
-    pinMode(TRIGGER, INPUT);
+    pinMode(ECHO, INPUT);
 
 }
 
@@ -19,7 +19,7 @@ int UltrasonicSensor::routine(){
     digitalWrite(TRIGGER, LOW);
     delayMicroseconds(2);
 
-    digitalWrite(ECHO, HIGH);
+    digitalWrite(TRIGGER, HIGH);
     delayMicroseconds(10);
     digitalWrite(TRIGGER, LOW);
 
@@ -62,18 +62,11 @@ int UltrasonicSensor::routine(){
 
 /**********Edge Detection*********/
 
-const char *edge_detection(int thresh, const char *unit){
+const char *edge_detection(UltrasonicSensor left_sensor, UltrasonicSensor right_sensor, int thresh, const char *unit){
 
     int left=0;
     int right=0;
     const char *message="blank edge detection message";
-
-    uint32_t TRIGGER_L=PA9;
-    uint32_t ECHO_L=PA10;
-    uint32_t TRIGGER_R=PA8;
-    uint32_t ECHO_R=PA7;
-    UltrasonicSensor left_sensor(TRIGGER_L, ECHO_L);
-    UltrasonicSensor right_sensor(TRIGGER_R, ECHO_R);
 
     left_sensor.set_type("edge");
     left_sensor.set_unit(unit);
