@@ -1,4 +1,4 @@
-#include <Wire.h>
+/*#include <Wire.h>
 #include <Adafruit_SSD1306.h>
 #include "tape_sensor.h"
 #include "ultrasonic_sensor.h"
@@ -147,9 +147,10 @@ void loop() {
   display.clearDisplay();
   display.setCursor(0,0);
 
-  rack_n_pinion_motor.set_direction(FORWARD);
+  rack_n_pinion_motor.set_direction(BACKWARD);
   rack_n_pinion_motor.set_pwm(3500);
   rack_n_pinion_motor.go();
+  display.println(position);
 
 
   //display.println(right_motor.position);
@@ -311,12 +312,13 @@ void loop() {
   
   //******************************************************
   
-  display.display();
+  /*display.display();
   delay(1);
   
-}
+}*/
 
-void speed_check(float speed_diff){
+
+/*void speed_check(float speed_diff){
 
     if(speed_diff<=2&&speed_diff>=0){
       speed_diff=0;
@@ -336,7 +338,7 @@ void speed_check(float speed_diff){
       speed_right=speed_right-(speed_diff*10.0);
     }*/
 
-    speed_right=speed_right-speed_diff*0.05;
+    /*speed_right=speed_right-speed_diff*0.05;
     speed_left=speed_left+speed_diff;
 
     if(speed_right>MAXIMUM_TAPE_SPEED){
@@ -378,3 +380,4 @@ void turn(int degrees, int direction){
   }
 
 }
+*/
