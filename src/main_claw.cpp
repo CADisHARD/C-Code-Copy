@@ -3,6 +3,8 @@
 #include "tape_sensor.h"
 #include "ultrasonic_sensor.h"
 #include "encoder_motor.h"
+#include "claw_servo_hall.h"
+#include "Servo.h"
 
 //*********************DECLARE OLED*****************************
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
@@ -49,7 +51,7 @@ void turn_read_encoder_wrapper(){
 
 //**********************DECLARE HALL SENSOR**************
 
-#define HALL PB5
+#define HALL PA6
 
 //**********DECLARE SONARS*****************************
 
@@ -75,16 +77,37 @@ void turn_read_encoder_wrapper(){
 
 //**********************DECLARE SERVO********************
 
-#define SERVO_CLAW PA0
+#define SERVO_CLAW PA_0
+Servo claw_servo;
+
+
+//*****************CLAW SERVO ANGLE MEASUREMENT************
+#define CLAW_INITIAL 90
+#define CLAW_HALL 45
+#define CLAW_GRAB 5
+
+ClawServoHall claw_system(claw_servo);
+
 
 void setup() {
 
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
-  display.display();
+  
   display.clearDisplay();
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
   display.setCursor(0,0);
+  display.println("Done");
+  display.display();
+
+  //setup for claw components
+  pinMode(SERVO_CLAW, OUTPUT);
+  pinMode (HALL, INPUT);
+  pinMode (MS_GRAB, INPUT);
+
+  claw_servo.attach(PA0);
+  claw_servo.write(CLAW_INITIAL);
+  
 
   attachInterrupt(digitalPinToInterrupt(ENCA_RP),rack_read_encoder_wrapper,RISING);
   attachInterrupt(digitalPinToInterrupt(ENCA_TT),turn_read_encoder_wrapper,RISING);
@@ -99,13 +122,23 @@ void loop() {
   display.clearDisplay();
   display.setCursor(0,0);
 
+  int if_grab = claw_system.grab_treasure();
+  display.print(analogRead(HALL));
+  display.print("\n");
+  display.print(if_grab);
+  display.print("\n");
+  
+  display.print(claw_system.if_lift_up());
+  display.display();
+  delay(50);
+
   rack_n_pinion_motor.set_direction(BACKWARD);
   rack_n_pinion_motor.set_pwm(3500);
   rack_n_pinion_motor.go();
-  display.println(rack_n_pinion_motor.position);
-
-  //Display and delay
+  display.println("The loop is working");
   display.display();
-  delay(1);
+  delay(5000);
+  claw_system.release_treasure();
+  delay(2000);
   
 }
