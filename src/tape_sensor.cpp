@@ -59,6 +59,12 @@ const char *TapeSensors::get_error(){
         position = 3;
         error=IDEAL_POSITION-position;
     }
+    else if(curr_L==1 && curr_M==1 && curr_R==1){
+        message="on target";
+        prev_message_000="whatever";
+        position = 3;
+        error=IDEAL_POSITION-position;
+    }
     
     else if(curr_L==1 && curr_M==1 && curr_R==0){
         message="slight right";
@@ -131,7 +137,7 @@ const char *TapeSensors::get_error(){
 
 int TapeSensors::get_norm_L_val(){
    
-   if(raw_L_val<45){
+   if(raw_L_val<40){
     normalized_L_val=0; //off the tape
    }
    else if(raw_L_val>=90){
@@ -143,10 +149,10 @@ int TapeSensors::get_norm_L_val(){
 }
 int TapeSensors::get_norm_M_val(){
 
-    if(raw_M_val<80){
+    if(raw_M_val<40){
     normalized_M_val=0; //off the tape
    }
-   else if(raw_M_val>=80){
+   else if(raw_M_val>=40){
     normalized_M_val=1; //on the tape
    }
 
@@ -155,10 +161,10 @@ int TapeSensors::get_norm_M_val(){
 }
 int TapeSensors::get_norm_R_val(){
 
-    if(raw_R_val<45){
+    if(raw_R_val<40){
     normalized_R_val=0; //off the tape
    }
-   else if(raw_R_val>=70){
+   else if(raw_R_val>=40){
     normalized_R_val=1; //on the tape
    }
 

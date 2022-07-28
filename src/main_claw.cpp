@@ -20,8 +20,8 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 #define BACKWARD -1
 
 
-#define ENCA_RP PB12
-#define ENCB_RP PB13
+#define ENCA_RP PB10
+#define ENCB_RP PB11
 #define PWM2_RP PB_9
 #define PWM1_RP PB_8
 
@@ -31,8 +31,8 @@ void rack_read_encoder_wrapper(){
     rack_n_pinion_motor.read_encoder();
 }
 
-#define ENCA_TT PB14
-#define ENCB_TT PB15
+#define ENCA_TT PB0
+#define ENCB_TT PB1
 #define PWM2_TT PA_9
 #define PWM1_TT PA_8
 
@@ -65,9 +65,11 @@ StepperMotor stepper_motor;
 
 //**********DECLARE SONARS*****************************
 
-#define TRIG_L PB11
-#define ECHO_L PB10
+#define TRIG_L PB12
+#define ECHO_L PB13
 
+#define TRIG_R PB14
+#define ECHO_R PB15
 #define TRIG_R PB1
 #define ECHO_R PB0
 #define MAXIMUM_DISTANCE 4000

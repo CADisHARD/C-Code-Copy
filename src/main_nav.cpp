@@ -1,8 +1,10 @@
-/*#include <Wire.h>
+/*
+#include <Wire.h>
 #include <Adafruit_SSD1306.h>
 #include "tape_sensor.h"
 #include "ultrasonic_sensor.h"
 #include "encoder_motor.h"
+#include "Adafruit_MPU6050.h"
 
 //*********************DECLARE OLED*****************************
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
@@ -26,8 +28,8 @@ int distance;
 //********************DECLARE MOTORS**************************
 
 //RIGHT MOTOR
-#define ENCA_R PB3
-#define ENCB_R PB4
+#define ENCA_R PB12
+#define ENCB_R PB13
 #define PWM2_R PB_8
 #define PWM1_R PB_9
 
@@ -35,8 +37,8 @@ EncoderMotor right_motor(ENCA_R, ENCB_R, PWM1_R, PWM2_R);
 
 //LEFT MOTOR
 
-#define ENCA_L PB13
-#define ENCB_L PB14
+#define ENCA_L PB14
+#define ENCB_L PB15
 #define PWM2_L PA_8
 #define PWM1_L PA_9
 
@@ -53,7 +55,7 @@ void left_motor_encoder_wrapper();
 #define FORWARD 1
 #define BACKWARD -1
 
-#define INITIAL_TAPE_SPEED 3000.0
+#define INITIAL_TAPE_SPEED 4000.0
 #define MAXIMUM_TAPE_SPEED 6000.0
 
 float speed_right=INITIAL_TAPE_SPEED;
@@ -87,57 +89,50 @@ UltrasonicSensor right_edge_detector(RIGHT_EDGE_TRIG, RIGHT_EDGE_ECHO);
 
 void turn(int degrees);
 
-//**************DECLARE CLAW MOTORS*****************************
+Adafruit_MPU6050 mpu;
 
-//Rack and pinion
+float angle = 0;
+float angular_vel=0;
+float del=100;
 
-#define ENCA_RP PB10
-#define ENCB_RP PB11
-#define PWM2_RP PB_0
-#define PWM1_RP PB_1
-
-int position=0;
-
-void rack_read_encoder_wrapper();
-
-EncoderMotor rack_n_pinion_motor(ENCA_RP, ENCB_RP, PWM1_RP, PWM2_RP);
-
-
-void read_enc(){
-  if(digitalRead(ENCB_RP)>0){
-    position++;
-  }
-  else{
-    position--;
-  }
-}
-
+long previous_time=0;
+long current_time=0;
 
 void setup() {
 
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
-  display.display();
   display.clearDisplay();
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
   display.setCursor(0,0);
 
-  pinMode(ENCA_RP, INPUT);
-  pinMode(ENCB_RP, INPUT);
-  //Setup Motors
-
   attachInterrupt(digitalPinToInterrupt(ENCA_R),right_motor_encoder_wrapper,RISING);
   attachInterrupt(digitalPinToInterrupt(ENCA_L),left_motor_encoder_wrapper,RISING);
 
+  // Try to initialize!
+  if (!mpu.begin()) {
+    display.println("Failed to find MPU6050 chip");
+    display.display();
+    while (1) {
+      delay(10);
+    }
+  }
+  display.println("MPU6050 Found!");
+  //setupt motion detection
+  mpu.setHighPassFilter(MPU6050_HIGHPASS_0_63_HZ);
+  mpu.setMotionDetectionThreshold(1);
+  mpu.setMotionDetectionDuration(20);
+  mpu.setInterruptPinLatch(true);	// Keep it latched.  Will turn off when reinitialized.
+  mpu.setInterruptPinPolarity(true);
+  mpu.setMotionInterrupt(true);
 
-  attachInterrupt(digitalPinToInterrupt(ENCA_RP),read_enc,RISING);
+  display.display();
+  
 
-  //pinMode(LEFT_EDGE_TRIG, OUTPUT);
-  //pinMode(LEFT_EDGE_ECHO, INPUT);
-
-  //Setup Tape Sensors
   tpsens.initial_reading();
   delay(2000);
+
+  previous_time=millis();
 }
 
 
@@ -147,72 +142,36 @@ void loop() {
   display.clearDisplay();
   display.setCursor(0,0);
 
-  rack_n_pinion_motor.set_direction(BACKWARD);
-  rack_n_pinion_motor.set_pwm(3500);
-  rack_n_pinion_motor.go();
-  display.println(position);
-
-
-  //display.println(right_motor.position);
-  //display.println(left_motor.position);
-
-  /*if(desired_position<right_motor.position){
-
-    //check the direction irl
-    right_motor.set_direction(1);
-    left_motor.set_direction(-1);
-    right_motor.go();
-    left_motor.go();
-    if(right_motor.position<desired_position){
-      display.println(right_motor.position);
-      display.println(left_motor.position);
-      display.display();
-      //delay(1);//do we need this delay?
-    }
-    else{
-      right_motor.stop();
-      left_motor.stop();
-      delay(2000);
-    }
-    //delay(10);
-
+  sensors_event_t a, g, temp;
+  mpu.getEvent(&a, &g, &temp);
+  float z=g.gyro.z;
+  if(abs(z)<0.1){
+    z=0;
   }
-  else if(desired_position>right_motor.position){
 
-    //check the direction irl
-    right_motor.set_direction(-1);
-    left_motor.set_direction(1);
-    right_motor.go();
-    left_motor.go();
-    if(right_motor.position<desired_position){
-      display.println(right_motor.position);
-      display.println(left_motor.position);
-      display.display();
-      //delay(1);//do we need this delay?
-    }
-    else{
-      right_motor.stop();
-      left_motor.stop();
-      delay(2000);
-    }
-  }
-  else{
-    display.println(right_motor.position);
-    display.display();
-    right_motor.stop();
-    left_motor.stop();
-    delay(10);
-  }*/
-  //delay(1000);
 
+  current_time=millis();
+  float dt=(current_time-previous_time)/1000.0;
   
 
+  display.println("Gyro x,y,z");
+  display.println(g.gyro.x);
+  display.println(g.gyro.y);
+  display.println(g.gyro.z);
 
-  //right_motor.turn(90, FORWARD);
-  //right_motor.go();
-  
-  
-  //Tape Following
+  float dtheta=z*dt;
+  angle=angle+dtheta*180.0/PI;
+
+  previous_time=millis();
+
+  display.println("Angle about z:");
+  display.println(angle);
+
+
+
+  display.display();
+
+  //TAPE FOLLOWING
 
   /*right_motor.set_direction(FORWARD);
   left_motor.set_direction(FORWARD);
@@ -223,102 +182,31 @@ void loop() {
   right_motor.go();
   left_motor.go();
 
+  
   tpsens.read_tape();
-
-  const char *message2=tpsens.get_error();
-  int L_val=tpsens.get_norm_L_val();
-  int M_val = tpsens.get_norm_M_val();
-  int R_val=tpsens.get_norm_R_val();
-
-  display.println(L_val);
-  display.println(M_val);
-  display.println(R_val);
+  display.println(tpsens.get_norm_L_val());
+  display.println(tpsens.get_norm_M_val());
+  display.println(tpsens.get_norm_R_val());
 
   display.println(tpsens.position);
   display.println(tpsens.error);
 
-  float speed_diff=tpsens.follow_tape_speed_correction();
+  float speed_diff = tpsens.follow_tape_speed_correction();
   speed_check(speed_diff);
 
+  display.println(speed_diff);
   display.println(speed_right);
-  display.println(speed_left);
-  display.println(speed_dif;f);*/
-
-
-  //********************IR PORTION CODE****************************
-  //GO STRAIGHT FOR TWO FEET
-
-  /*display.println("the display is working :)");
-
-  right_motor.set_direction(FORWARD);
-  left_motor.set_direction(FORWARD);
-
-  right_motor.set_pwm(speed_right);
-  left_motor.set_pwm(speed_left);
-
-  right_motor.go_distance(24,FORWARD);
-  left_motor.go_distance(24, FORWARD);
- 
-  //SEES TREASURE: BACK UP, TURN TOWARDS IT
-
-  right_motor.stop();
-  left_motor.stop();
-
-  delay(500);
-
-  right_motor.go_distance(4, BACKWARD);
-  left_motor.go_distance(4, BACKWARD);
-
-  right_motor.stop();
-  left_motor.stop();
-
-  delay(500);
-
-  turn(20, LEFT);
-  delay(500);
-
-  right_motor.go_distance(6, FORWARD);
-  left_motor.go_distance(6, FORWARD);
-
-  delay(1000);
-
-  //GO BACK THE SAME WAY IT CAME
-
-  right_motor.go_distance(6, BACKWARD);
-  left_motor.go_distance(6, BACKWARD);
-
-  delay(500);
-  turn(20, RIGHT);
-  delay(500);
-
-  right_motor.stop();
-  left_motor.stop();
-
-  //CONTINUE FORWARD
-
-  right_motor.go_distance(12,FORWARD);
-  left_motor.go_distance(12, FORWARD);
-
-  //TURN RIGHT
-
-  right_motor.stop();
-  left_motor.stop();
-
-  delay(500);
-
-  turn(90, RIGHT);
-
-  delay(500);*/
+  display.println(speed_left);*/
   
-  //******************************************************
-  
-  /*display.display();
-  delay(1);
+
+  /*//Display and delay
+  //display.display();
+  delay((int)del); //CHANGE THE DELAY BACK TO 5 MS
   
 }*/
 
-
-/*void speed_check(float speed_diff){
+/*
+void speed_check(float speed_diff){
 
     if(speed_diff<=2&&speed_diff>=0){
       speed_diff=0;
@@ -331,15 +219,8 @@ void loop() {
       speed_left=INITIAL_TAPE_SPEED;
     }
 
-    /*if(speed_diff>=0){
-      speed_right=speed_right-(speed_diff/10.0);
-    }
-    else if(speed_diff<0){
-      speed_right=speed_right-(speed_diff*10.0);
-    }*/
-
-    /*speed_right=speed_right-speed_diff*0.05;
-    speed_left=speed_left+speed_diff;
+    speed_right=speed_right+speed_diff;
+    speed_left=speed_left-speed_diff;
 
     if(speed_right>MAXIMUM_TAPE_SPEED){
       speed_right=MAXIMUM_TAPE_SPEED;

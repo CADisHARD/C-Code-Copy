@@ -12,10 +12,7 @@ class TapeSensors{
         uint32_t REFLECTANCE_M =PA1;
         uint32_t REFLECTANCE_R =PA2;
 
-        int raw_L_val=0;
-        int raw_M_val=0;
-        int raw_R_val=0;
-
+        
         int normalized_L_val=0;
         int normalized_M_val=0;
         int normalized_R_val=0;
@@ -33,12 +30,17 @@ class TapeSensors{
 
         //temporary for debugging only
 
+        int raw_L_val=0;
+        int raw_M_val=0;
+        int raw_R_val=0;
+
+
         float P=0;
         float I=0;
         float D=0;
-        float kp=4;
+        float kp=220;
         float ki=0.0005;
-        float kd = 90;
+        float kd = 3000;
         int position=0;
         int error=0;
         int last_error=0;
