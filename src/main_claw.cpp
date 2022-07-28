@@ -1,8 +1,12 @@
 #include <Wire.h>
 #include <Adafruit_SSD1306.h>
+#include <NewPing.h>
 #include "tape_sensor.h"
 #include "ultrasonic_sensor.h"
 #include "encoder_motor.h"
+#include "claw_servo_hall.h"
+#include "Servo.h"
+#include "stepper_motor.h"
 
 //*********************DECLARE OLED*****************************
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
@@ -47,17 +51,26 @@ void turn_read_encoder_wrapper(){
 #define MS1 PA15
 #define MS2 PB3
 
+#define STEP_PER_CM 310
+#define STEP_PER_IN 788
+
 //**********************DECLARE HALL SENSOR**************
 
-#define HALL PB5
+#define HALL PA6
 
 //**********DECLARE SONARS*****************************
 
 #define TRIG_L PB12
 #define ECHO_L PB13
 
-#define TRIG_R PB4
+#define TRIG_R PB14
 #define ECHO_R PB15
+#define TRIG_R PB1
+#define ECHO_R PB0
+#define MAXIMUM_DISTANCE 4000
+
+NewPing treasure_sonar_left(TRIG_L,ECHO_L,MAXIMUM_DISTANCE);
+NewPing treasure_sonar_right(TRIG_R,ECHO_R,MAXIMUM_DISTANCE);
 
 //*****************DECLARE BP**************************
 
@@ -75,16 +88,44 @@ void turn_read_encoder_wrapper(){
 
 //**********************DECLARE SERVO********************
 
-#define SERVO_CLAW PA0
+#define SERVO_CLAW PA_0
+Servo claw_servo;
+
+//*****************CLAW SERVO ANGLE MEASUREMENT************
+#define CLAW_INITIAL 90
+#define CLAW_HALL 45
+#define CLAW_GRAB 5
+
+
+ClawServoHall claw_system(claw_servo);
+StepperMotor stepper_motor;
+
 
 void setup() {
 
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
-  display.display();
+  
   display.clearDisplay();
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
   display.setCursor(0,0);
+  display.println("Done");
+  display.display();
+
+  //setup for claw components
+  pinMode(SERVO_CLAW, OUTPUT);
+  pinMode (HALL, INPUT);
+  pinMode (MS_GRAB, INPUT);
+
+  //setup for stepper motor
+  stepper_motor.resetEDPins();
+  digitalWrite(EN, LOW);
+  delay(300);
+
+
+  claw_servo.attach(PA0);
+  claw_servo.write(CLAW_INITIAL);
+  
 
   attachInterrupt(digitalPinToInterrupt(ENCA_RP),rack_read_encoder_wrapper,RISING);
   attachInterrupt(digitalPinToInterrupt(ENCA_TT),turn_read_encoder_wrapper,RISING);
@@ -99,14 +140,63 @@ void loop() {
   display.clearDisplay();
   display.setCursor(0,0);
 
+  /*
+  delay(50);
+  int distance = treasure_sonar_left.ping_cm();
+
+  display.println("Distance: ");
+  
+  display.println(distance);
+
+  if (distance <= 15)
+  {
+    display.println("Treasure detected! :D ");
+  }
+  else
+  {
+    display.println("No treasure detected :o ");
+  }
+  display.display();
+  */
+
+  
+  delay(500);
+  stepper_motor.descend(788*3);
+  delay(5000);
+  /*
+  while(true){
+    stepper_motor.rise(800);
+    delay(500);
+    stepper_motor.descend(800);
+    delay(500);
+  }
+  */
+  
+  
+
+  /*
+  int if_grab = claw_system.grab_treasure();
+  display.print(analogRead(HALL));
+  display.print("\n");
+  display.print(if_grab);
+  display.print("\n");
+  
+  display.print(claw_system.if_lift_up());
+  display.display();
+  delay(50);
+  */
+
+
+  /*
   rack_n_pinion_motor.set_direction(BACKWARD);
   rack_n_pinion_motor.set_pwm(3500);
   rack_n_pinion_motor.go();
-  display.println(rack_n_pinion_motor.position);
-
-  //Display and delay
+  display.println("The loop is working");
   display.display();
-  delay(1);
+  delay(5000);
+  claw_system.release_treasure();
+  delay(2000);
+  */
   
 }
 
