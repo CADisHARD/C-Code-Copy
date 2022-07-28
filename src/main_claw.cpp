@@ -148,18 +148,19 @@ void setup() {
   int output_signal = 1;
 
   claw_servo.attach(PA0);
-  int initial_position = claw_servo.read();
+  /*int initial_position = claw_servo.read();
+
   while (initial_position > CLAW_INITIAL){
     claw_servo.write(initial_position);
-    delay(15);
+    delay(500);
     initial_position--;
   }
   while (initial_position < CLAW_INITIAL){
     claw_servo.write(initial_position);
-    delay(15);
+    delay(500);
     initial_position++;
   }
-  
+*/
 
   attachInterrupt(digitalPinToInterrupt(ENCA_RP),rack_read_encoder_wrapper,RISING);
   attachInterrupt(digitalPinToInterrupt(ENCA_TT),turn_read_encoder_wrapper,RISING);
@@ -185,12 +186,13 @@ void loop() {
  display.setCursor(0,0);
  display.println("YES");
  display.display();
- /*
+ 
  claw_system.grab_large_treasure();
  delay(50);
  claw_system.release_treasure();
-*/
-  //claw_servo.write(20);
+ delay(50);
+
+
 
   /*
   if(treasure_sonar_right.ping_cm()>=TREASURE_ONE){
