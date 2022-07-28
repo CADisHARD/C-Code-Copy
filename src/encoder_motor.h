@@ -14,6 +14,7 @@ class EncoderMotor{
         PinName PWM2;
         
         int motor_freq=1000;
+        int position = 0;
         
        
         int PWM_value=2000;
@@ -23,6 +24,10 @@ class EncoderMotor{
 
         int POSITIONS_PER_ROTATION = 145;   
         int WHEEL_DIAMETER = 2.6;     
+
+        int TABLE_PER_ROTATION = 180;
+        int CLAW_GEAR_DIAMETER = 5;
+
         
         
 
@@ -44,7 +49,9 @@ class EncoderMotor{
         void turn(int degrees, int dir);
         void go_distance(float distance, int dir);
         void go_to_position(int pos); 
-        int position = 0;
+        void table_turn(int angle, int dir);
+        void claw_go(float distance, int dir);
+        
 };
 
 

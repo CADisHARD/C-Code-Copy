@@ -121,3 +121,27 @@ void EncoderMotor::go_distance(float distance, int dir){ //in inches
     
 }
 
+void EncoderMotor::table_turn(int angle, int dir){
+    int new_pos=0;
+
+    int pos_diff = TABLE_PER_ROTATION*degrees/360;
+
+    //check this irl
+    if(dir==1){
+        new_pos=position+pos_diff;
+    }
+    else if(dir==-1){
+        new_pos=position-pos_diff;
+    }
+
+    go_to_position(new_pos);
+
+
+}
+
+void EncoderMotor::claw_go(float distance, int dir){
+
+    int angle = 360.0*distance/(PI*(float)CLAW_GEAR_DIAMETER);
+    turn(angle, dir);
+
+}
