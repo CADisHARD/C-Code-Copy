@@ -65,12 +65,11 @@ void turn_read_encoder_wrapper(){
 
 #define TRIG_R PB14
 #define ECHO_R PB15
-#define TRIG_R PB1
-#define ECHO_R PB0
+
 #define MAXIMUM_DISTANCE 4000
 
-NewPing treasure_sonar_left(TRIG_L,ECHO_L,MAXIMUM_DISTANCE);
-NewPing treasure_sonar_right(TRIG_R,ECHO_R,MAXIMUM_DISTANCE);
+NewPing treasure_sonar_right(TRIG_L,ECHO_L,MAXIMUM_DISTANCE); //right left as viewed from the top with back at y=0
+NewPing treasure_sonar_left(TRIG_R,ECHO_R,MAXIMUM_DISTANCE);
 
 //*****************DECLARE BP**************************
 
@@ -99,6 +98,7 @@ Servo claw_servo;
 
 ClawServoHall claw_system(claw_servo);
 StepperMotor stepper_motor;
+
 
 
 void setup() {
@@ -139,6 +139,11 @@ void loop() {
   //Reset Display
   display.clearDisplay();
   display.setCursor(0,0);
+
+  if(treasure_sonar_right.ping_cm()>){
+
+
+  }
 
   /*
   delay(50);
