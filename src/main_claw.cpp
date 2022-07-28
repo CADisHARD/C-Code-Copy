@@ -36,6 +36,9 @@ void rack_read_encoder_wrapper(){
 #define PWM2_TT PA_9
 #define PWM1_TT PA_8
 
+#define LEFT_POSITION 100
+#define RIGHT_POSITION 100
+
 EncoderMotor turn_table_motor(ENCA_TT, ENCB_TT, PWM1_TT, PWM2_TT);
 void turn_read_encoder_wrapper();
 void turn_read_encoder_wrapper(){
@@ -53,6 +56,8 @@ void turn_read_encoder_wrapper(){
 
 #define STEP_PER_CM 310
 #define STEP_PER_IN 788
+
+StepperMotor stepper_motor;
 
 //**********************DECLARE HALL SENSOR**************
 
@@ -95,10 +100,19 @@ Servo claw_servo;
 #define CLAW_HALL 45
 #define CLAW_GRAB 5
 
-
 ClawServoHall claw_system(claw_servo);
-StepperMotor stepper_motor;
 
+#define LEFT 1
+#define RIGHT -1
+
+//define threshold for each stage
+#define TREASURE_ONE 10
+#define THEASURE_TWO 10
+#define ARCH_DISTANCE 10
+#define TREASURE_THREE 10
+#define TREASURE_FOUR 10
+
+void pick_up_left(int left_value);
 
 
 void setup() {
@@ -112,6 +126,15 @@ void setup() {
   display.println("Done");
   display.display();
 
+  pinMode(TRIG_L,OUTPUT);
+  pinMode(ECHO_L,INPUT);
+  pinMode(TRIG_R,OUTPUT);
+  pinMode(ECHO_R,INPUT);
+
+  //setup for bluepill communication
+  pinMode(COMMIN,INPUT);
+  pinMode(COMMOUT,OUTPUT);
+
   //setup for claw components
   pinMode(SERVO_CLAW, OUTPUT);
   pinMode (HALL, INPUT);
@@ -122,9 +145,21 @@ void setup() {
   digitalWrite(EN, LOW);
   delay(300);
 
+  int stage = 0;
+  int output_signal = 1;
 
   claw_servo.attach(PA0);
-  claw_servo.write(CLAW_INITIAL);
+  int initial_position = claw_servo.read();
+  while (initial_position > CLAW_INITIAL){
+    claw_servo.write(initial_position);
+    delay(15);
+    initial_position--;
+  }
+  while (initial_position < CLAW_INITIAL){
+    claw_servo.write(initial_position);
+    delay(15);
+    initial_position++;
+  }
   
 
   attachInterrupt(digitalPinToInterrupt(ENCA_RP),rack_read_encoder_wrapper,RISING);
@@ -137,8 +172,26 @@ void setup() {
 void loop() {
 
   //Reset Display
+  /*
   display.clearDisplay();
   display.setCursor(0,0);
+  turn_table_motor.set_pwm(3500);
+  turn_table_motor.go_to_position(23); //position 23 is 90 degrees
+
+  display.println(turn_table_motor.get_position());
+  display.display();
+  delayMicroseconds(5);
+  */
+ display.clearDisplay();
+ display.setCursor(0,0);
+ display.println("YES");
+ display.display();
+ /*
+ claw_system.grab_large_treasure();
+ delay(50);
+ claw_system.release_treasure();
+*/
+  //claw_servo.write(20);
 
   if(treasure_sonar_right.ping_cm()>){
 
@@ -146,28 +199,59 @@ void loop() {
   }
 
   /*
-  delay(50);
-  int distance = treasure_sonar_left.ping_cm();
+  if(treasure_sonar_right.ping_cm()>=TREASURE_ONE){
+
+    turn_table_motor.table_turn(90,RIGHT);
+    rack_n_pinion_motor.claw_go(treasure_sonar_right.ping_cm(),FORWARD);
+    stepper_motor.descend(STEP_PER_CM*8);
+    int if_grab = claw_system.grab_treasure();
+    if (if_grab = 1){
+      stepper_motor.rise(STEP_PER_CM*8);
+      if (claw_system.if_lift_up()==1){
+        turn_table_motor.turn(0,LEFT);
+      }
+      
+    }
+  }
+  */
+
+
+
+  
+  
+  /*int distance = treasure_sonar_right.ping_cm();
 
   display.println("Distance: ");
   
   display.println(distance);
+  display.display();
+  //delay(50);
 
   if (distance <= 15)
   {
     display.println("Treasure detected! :D ");
+    display.display();
+    int if_grab = claw_system.grab_treasure();
+    
+    //delay(5000);
   }
   else
   {
     display.println("No treasure detected :o ");
+    display.display();
   }
   display.display();
-  */
+  delay(300);*/
 
   
+  
+
+  /*
   delay(500);
   stepper_motor.descend(788*3);
   delay(5000);
+  */
+
   /*
   while(true){
     stepper_motor.rise(800);
@@ -202,6 +286,35 @@ void loop() {
   claw_system.release_treasure();
   delay(2000);
   */
-  
-}
 
+ //*****************CODE ATTEMPT************
+/*
+ int left_sonar_value = treasure_sonar_left.ping_cm();
+ int rignt_sonar_value = treasure_sonar_right.ping_cm();
+
+ if (stage == 0){
+  if (left_sonar_value < TREASURE_ONE){
+      pick_up_left(left_sonar_value);
+  }
+  else{
+    analogWrite(COMMOUT,output_signal);
+  }
+  
+*/
+
+ }
+
+
+  
+
+
+/*
+void pick_up_left(int left_value){
+  turn_table_motor.table_turn(90,1);
+  rack_n_pinion_motor.claw_go(left_value,1);
+  stepper_motor.descend(STEP_PER_IN*)
+
+
+
+}
+*/

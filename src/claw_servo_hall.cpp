@@ -8,34 +8,57 @@ ClawServoHall::ClawServoHall(Servo &input_servo){
 }
 
 
-
-
-
 int ClawServoHall::grab_treasure(){
     
-    myservo.write(CLAW_HALL);
-    delay(500);
+    int initial_position = myservo.read();
+    while (initial_position > CLAW_HALL){
+        myservo.write(initial_position);
+        delay(15);
+        initial_position--;
+    }
+    while (initial_position < CLAW_HALL){
+        myservo.write(initial_position);
+        delay(15);
+        initial_position++;
+    }
 
     int if_bomb = analogRead(HALL_PIN);
     
     if (if_bomb > 50){
         //if not bomb, pick up the treasure, and return 1 to indicate not bomb
-        myservo.write(CLAW_GRAB);
-        delay(50);
+        int current_position = myservo.read();
+        while (current_position > CLAW_GRAB){
+            myservo.write(current_position);
+            delay(15);
+            current_position--;
+        }
+        while (current_position < CLAW_GRAB){
+            myservo.write(current_position);
+            delay(15);
+            current_position++;
+        }
         return 1;
     }
     else{
         //if it is bomb, return to the initial angle, and return 0 to indicate it is bomb
-        myservo.write(CLAW_INITIAL);
-        delay(50);
+        release_treasure();
         return 0;
     }
 
 }
 
 void ClawServoHall::grab_large_treasure(){
-    myservo.write(CLAW_GRAB);
-    delay(50);
+    int initial_position = myservo.read();
+    while (initial_position > CLAW_GRAB){
+        myservo.write(initial_position);
+        delay(15);
+        initial_position--;
+    }
+    while (initial_position < CLAW_GRAB){
+        myservo.write(initial_position);
+        delay(15);
+        initial_position++;
+    }
 }
 
 int ClawServoHall::if_lift_up(){
@@ -49,6 +72,15 @@ int ClawServoHall::if_lift_up(){
 }
 
 void ClawServoHall::release_treasure(){
-    myservo.write(CLAW_INITIAL);
-    delay(50);
+    int initial_position = myservo.read();
+    while (initial_position > CLAW_INITIAL){
+        myservo.write(initial_position);
+        delay(15);
+        initial_position--;
+    }
+    while (initial_position < CLAW_INITIAL){
+        myservo.write(initial_position);
+        delay(15);
+        initial_position++;
+    }
 }

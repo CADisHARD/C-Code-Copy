@@ -63,35 +63,41 @@ void EncoderMotor::read_encoder(){
 
 void EncoderMotor::go_to_position(int pos){
 
-    //pwm_start(PWM1, motor_freq, PWM_value, RESOLUTION_12B_COMPARE_FORMAT);
+    if(pos-3<position&&position<pos+3){
+        stop();
+    }
 
-    if(pos>position){
+    else if(pos>position){
 
         //check the direction irl
-        set_direction(-1);
-        while(position!=pos){
-            read_encoder();
+        set_direction(1);
+        while(position<pos){
+            //read_encoder();
             go();
-            delay(1);//do we need this delay?
+            delayMicroseconds(5);
         }
-        delay(10);
+        delay(100);
 
+    }
+    else if(pos-3<position&&position<pos+3){
+        stop();
     }
     else if(pos<position){
 
         //check the direction irl
-        set_direction(1);
-        while(position!=pos){ //why does position have to be negative
-            read_encoder();
+        set_direction(-1);
+        while(position>pos){ //why does position have to be negative
+            //read_encoder();
             go();
             delay(1);//do we need this delay?
         }
         delay(10);
 
     }
-    else{
+    else if(pos-3<position&&position<pos+3){
         stop();
     }
+
 
 }
 
@@ -121,3 +127,27 @@ void EncoderMotor::go_distance(float distance, int dir){ //in inches
     
 }
 
+void EncoderMotor::table_turn(int angle, int dir){
+    int new_pos=0;
+
+    int pos_diff = TABLE_PER_ROTATION*angle/360;
+
+    //check this irl
+    if(dir==1){
+        new_pos=position+pos_diff;
+    }
+    else if(dir==-1){
+        new_pos=position-pos_diff;
+    }
+
+    go_to_position(new_pos);
+
+
+}
+
+void EncoderMotor::claw_go(float distance, int dir){
+
+    int angle = 360.0*distance/(PI*(float)CLAW_GEAR_DIAMETER);
+    turn(angle, dir);
+
+}
