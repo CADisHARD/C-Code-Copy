@@ -70,8 +70,7 @@ StepperMotor stepper_motor;
 
 #define TRIG_R PB14
 #define ECHO_R PB15
-#define TRIG_R PB1
-#define ECHO_R PB0
+
 #define MAXIMUM_DISTANCE 4000
 
 NewPing treasure_sonar_left(TRIG_L,ECHO_L,MAXIMUM_DISTANCE);
@@ -126,6 +125,11 @@ void setup() {
   display.println("Done");
   display.display();
 
+  pinMode(TRIG_L,OUTPUT);
+  pinMode(ECHO_L,INPUT);
+  pinMode(TRIG_R,OUTPUT);
+  pinMode(ECHO_R,INPUT);
+
   //setup for bluepill communication
   pinMode(COMMIN,INPUT);
   pinMode(COMMOUT,OUTPUT);
@@ -144,7 +148,17 @@ void setup() {
   int output_signal = 1;
 
   claw_servo.attach(PA0);
-  claw_servo.write(CLAW_INITIAL);
+  int initial_position = claw_servo.read();
+  while (initial_position > CLAW_INITIAL){
+    claw_servo.write(initial_position);
+    delay(15);
+    initial_position--;
+  }
+  while (initial_position < CLAW_INITIAL){
+    claw_servo.write(initial_position);
+    delay(15);
+    initial_position++;
+  }
   
 
   attachInterrupt(digitalPinToInterrupt(ENCA_RP),rack_read_encoder_wrapper,RISING);
@@ -157,9 +171,28 @@ void setup() {
 void loop() {
 
   //Reset Display
+  /*
   display.clearDisplay();
   display.setCursor(0,0);
+  turn_table_motor.set_pwm(3500);
+  turn_table_motor.go_to_position(23); //position 23 is 90 degrees
 
+  display.println(turn_table_motor.get_position());
+  display.display();
+  delayMicroseconds(5);
+  */
+ display.clearDisplay();
+ display.setCursor(0,0);
+ display.println("YES");
+ display.display();
+ /*
+ claw_system.grab_large_treasure();
+ delay(50);
+ claw_system.release_treasure();
+*/
+  //claw_servo.write(20);
+
+  /*
   if(treasure_sonar_right.ping_cm()>=TREASURE_ONE){
 
     turn_table_motor.table_turn(90,RIGHT);
@@ -174,27 +207,37 @@ void loop() {
       
     }
   }
+  */
 
 
 
-  /*
-  delay(50);
-  int distance = treasure_sonar_left.ping_cm();
+  
+  
+  /*int distance = treasure_sonar_right.ping_cm();
 
   display.println("Distance: ");
   
   display.println(distance);
+  display.display();
+  //delay(50);
 
   if (distance <= 15)
   {
     display.println("Treasure detected! :D ");
+    display.display();
+    int if_grab = claw_system.grab_treasure();
+    
+    //delay(5000);
   }
   else
   {
     display.println("No treasure detected :o ");
+    display.display();
   }
   display.display();
-  */
+  delay(300);*/
+
+  
   
 
   /*

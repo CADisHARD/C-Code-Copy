@@ -17,7 +17,7 @@ class EncoderMotor{
         int position = 0;
         
        
-        int PWM_value=2000;
+        int PWM_value=3500;
         int direction = 1;
 
         
@@ -25,7 +25,7 @@ class EncoderMotor{
         int POSITIONS_PER_ROTATION = 145;   
         int WHEEL_DIAMETER = 2.6;     
 
-        int TABLE_PER_ROTATION = 180;
+        int TABLE_PER_ROTATION = 4;
         int CLAW_GEAR_DIAMETER = 5;
 
         
