@@ -96,9 +96,9 @@ NewPing treasure_sonar_right(TRIG_R,ECHO_R,MAXIMUM_DISTANCE);
 Servo claw_servo;
 
 //*****************CLAW SERVO ANGLE MEASUREMENT************
-#define CLAW_INITIAL 90
-#define CLAW_HALL 45
-#define CLAW_GRAB 5
+#define CLAW_INITIAL 170
+#define CLAW_HALL 150
+#define CLAW_GRAB 110
 
 ClawServoHall claw_system(claw_servo);
 
@@ -113,6 +113,7 @@ ClawServoHall claw_system(claw_servo);
 #define TREASURE_FOUR 10
 
 void pick_up_left(int left_value);
+
 
 void setup() {
 
@@ -147,20 +148,26 @@ void setup() {
   int stage = 0;
   int output_signal = 1;
 
+
   claw_servo.attach(PA0);
-  /*int initial_position = claw_servo.read();
+  claw_servo.write(CLAW_HALL);
+
+
+  
+  int initial_position = claw_servo.read();
 
   while (initial_position > CLAW_INITIAL){
     claw_servo.write(initial_position);
-    delay(500);
+    delay(50);
     initial_position--;
   }
   while (initial_position < CLAW_INITIAL){
     claw_servo.write(initial_position);
-    delay(500);
+    delay(50);
     initial_position++;
   }
-*/
+  
+
 
   attachInterrupt(digitalPinToInterrupt(ENCA_RP),rack_read_encoder_wrapper,RISING);
   attachInterrupt(digitalPinToInterrupt(ENCA_TT),turn_read_encoder_wrapper,RISING);
@@ -182,16 +189,28 @@ void loop() {
   display.display();
   delayMicroseconds(5);
   */
+ 
  display.clearDisplay();
  display.setCursor(0,0);
  display.println("YES");
+ int read = treasure_sonar_left.ping_cm();
+ display.println(read);
  display.display();
- 
- claw_system.grab_large_treasure();
- delay(50);
- claw_system.release_treasure();
- delay(50);
 
+ if (read < 15){
+  claw_system.grab_large_treasure();
+ delay(2000);
+ claw_system.release_treasure();
+ delay(2000);
+ }
+ delay(20);
+ 
+ /*
+ claw_system.grab_large_treasure();
+ delay(2000);
+ claw_system.release_treasure();
+ delay(2000);
+*/
 
 
   /*
