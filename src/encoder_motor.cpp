@@ -1,15 +1,18 @@
 #include "encoder_motor.h"
+#include <Adafruit_SSD1306.h>
 
 
 void pwm_start(PinName pin, uint32_t clock_freq, uint32_t value, TimerCompareFormat_t resolution);
 
 
-EncoderMotor::EncoderMotor(uint32_t enca,uint32_t encb, PinName pwm1, PinName pwm2){
+EncoderMotor::EncoderMotor(uint32_t enca,uint32_t encb, PinName pwm1, PinName pwm2, int degrees_per_click, int enc_offset){
 
     ENCA=enca;
     ENCB=encb;
     PWM1=pwm1;
     PWM2=pwm2;
+    DEGREES_PER_CLICK=degrees_per_click;
+    ENCODER_OFFSET=enc_offset;
     pinMode(ENCA, INPUT);
     pinMode(ENCB, INPUT);
     pinMode(PWM1, OUTPUT);
@@ -48,6 +51,8 @@ void EncoderMotor::stop(){
 }
 
 
+
+
 void EncoderMotor::read_encoder(){
 
     int b = digitalRead(ENCB);
@@ -61,60 +66,109 @@ void EncoderMotor::read_encoder(){
 
 }
 
-void EncoderMotor::go_to_position(int pos){
 
-    if(pos-3<position&&position<pos+3){
+void EncoderMotor::count_positions(){
+
+    if(digitalRead(ENCA)==HIGH&&digitalRead(ENCB)==HIGH){
+        position++;
+    }
+
+}
+
+
+
+void EncoderMotor::go_to_position(int pos, Adafruit_SSD1306 display){
+
+    if(pos-ENCODER_OFFSET<position&&position<pos+ENCODER_OFFSET){
         stop();
+        display.clearDisplay();
+        display.setCursor(0,0);
+        display.println(position);
+        display.display();
     }
 
     else if(pos>position){
 
-        //check the direction irl
         set_direction(1);
         while(position<pos){
-            //read_encoder();
+            display.clearDisplay();
+            display.setCursor(0,0);
+            display.println(get_position());
+            display.display();
             go();
             delayMicroseconds(5);
         }
+        stop();
         delay(100);
 
     }
-    else if(pos-3<position&&position<pos+3){
-        stop();
+    else if(pos-ENCODER_OFFSET<get_position()&&get_position()<pos+ENCODER_OFFSET){
+       stop();
     }
-    else if(pos<position){
+    else if(pos<get_position()){
 
         //check the direction irl
         set_direction(-1);
-        while(position>pos){ //why does position have to be negative
-            //read_encoder();
+        while(get_position()>pos){
+            display.clearDisplay();
+            display.setCursor(0,0);
+            display.println(get_position());
+            display.display();
             go();
-            delay(1);//do we need this delay?
+            delayMicroseconds(5);//do we need this delay?
         }
-        delay(10);
+        stop();
+        delay(100);
 
     }
-    else if(pos-3<position&&position<pos+3){
-        stop();
+    else if(pos-ENCODER_OFFSET<get_position()&&get_position()<pos+ENCODER_OFFSET){
+       stop();
+       display.clearDisplay();
+            display.setCursor(0,0);
+       display.println(get_position());
+        display.display();
     }
 
 
 }
 
-void EncoderMotor::turn(int degrees, int dir){
+/*void EncoderMotor::turn(int degrees, int dir){
+    
     int new_pos=0;
+    int pos_diff = degrees/DEGREES_PER_CLICK;
 
-    int pos_diff = POSITIONS_PER_ROTATION*degrees/360;
-
-    //check this irl
-    if(dir==1){
+    //left (aka cw) is positive position for yellow motors convention: cw is negative ccw is positive
+    if(dir==-1){
         new_pos=position+pos_diff;
     }
-    else if(dir==-1){
+    else if(dir==1){
         new_pos=position-pos_diff;
     }
+    go_to_position(new_pos, display);
+}*/
 
-    go_to_position(new_pos);
+void EncoderMotor::turn_positions(int desired_position, int dir, Adafruit_SSD1306 display){
+
+    if(dir==-1){ //left aka cw
+
+        //double check this in real life or switch pwm pins
+        set_direction(-1);
+    }
+    else if(dir==1){ //right aka ccw
+        set_direction(1);
+    }
+
+    while(position<=desired_position){
+        go();
+        count_positions();
+        display.clearDisplay();
+        display.setCursor(0,0);
+        display.println(position);
+        display.display();
+    }
+
+    stop();
+
 }
 
 
@@ -127,23 +181,6 @@ void EncoderMotor::go_distance(float distance, int dir){ //in inches
     
 }
 
-void EncoderMotor::table_turn(int angle, int dir){
-    int new_pos=0;
-
-    int pos_diff = TABLE_PER_ROTATION*angle/360;
-
-    //check this irl
-    if(dir==1){
-        new_pos=position+pos_diff;
-    }
-    else if(dir==-1){
-        new_pos=position-pos_diff;
-    }
-
-    go_to_position(new_pos);
-
-
-}
 
 void EncoderMotor::claw_go(float distance, int dir){
 

@@ -1,3 +1,4 @@
+
 #include <Wire.h>
 #include <Adafruit_SSD1306.h>
 #include <NewPing.h>
@@ -25,10 +26,16 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 #define PWM2_RP PB_9
 #define PWM1_RP PB_8
 
-EncoderMotor rack_n_pinion_motor(ENCA_RP, ENCB_RP, PWM1_RP, PWM2_RP);
+EncoderMotor rack_n_pinion_motor(ENCA_RP, ENCB_RP, PWM1_RP, PWM2_RP, 24, 5);
 void rack_read_encoder_wrapper();
 void rack_read_encoder_wrapper(){
-    rack_n_pinion_motor.read_encoder();
+    int b = digitalRead(ENCB_RP);
+    if(b > 0){
+        rack_n_pinion_motor.position++;
+    }
+    else{
+        rack_n_pinion_motor.position--;
+    }    
 }
 
 #define ENCA_TT PB0
@@ -39,10 +46,16 @@ void rack_read_encoder_wrapper(){
 #define LEFT_POSITION 100
 #define RIGHT_POSITION 100
 
-EncoderMotor turn_table_motor(ENCA_TT, ENCB_TT, PWM1_TT, PWM2_TT);
+EncoderMotor turn_table_motor(ENCA_TT, ENCB_TT, PWM1_TT, PWM2_TT, 24, 5);
 void turn_read_encoder_wrapper();
 void turn_read_encoder_wrapper(){
-    turn_table_motor.read_encoder();
+    int b = digitalRead(ENCB_TT);
+    if(b > 0){
+        turn_table_motor.position++;
+    }
+    else{
+        turn_table_motor.position--;
+    }  
 }
 
 
@@ -73,7 +86,7 @@ StepperMotor stepper_motor;
 
 #define MAXIMUM_DISTANCE 4000
 
-NewPing treasure_sonar_left(TRIG_L,ECHO_L,MAXIMUM_DISTANCE);
+NewPing treasure_sonar_left(TRIG_L,ECHO_L,MAXIMUM_DISTANCE); //right left as viewed from the top with back at y=0
 NewPing treasure_sonar_right(TRIG_R,ECHO_R,MAXIMUM_DISTANCE);
 
 //*****************DECLARE BP**************************
@@ -102,8 +115,8 @@ Servo claw_servo;
 
 ClawServoHall claw_system(claw_servo);
 
-#define LEFT 1
-#define RIGHT -1
+#define LEFT -1
+#define RIGHT 1
 
 //define threshold for each stage
 #define TREASURE_ONE 10
@@ -114,6 +127,11 @@ ClawServoHall claw_system(claw_servo);
 
 void pick_up_left(int left_value);
 
+<<<<<<< HEAD
+=======
+int rack_has_gone = 0;
+
+>>>>>>> 2d77c7977d0f41fb93dab064ffb9cac5f9527519
 
 void setup() {
 
@@ -150,11 +168,16 @@ void setup() {
 
 
   claw_servo.attach(PA0);
+<<<<<<< HEAD
   
   //claw_servo.write(150);
 
 
   /*
+=======
+  claw_servo.write(CLAW_HALL);
+
+>>>>>>> 2d77c7977d0f41fb93dab064ffb9cac5f9527519
   int initial_position = claw_servo.read();
 
   while (initial_position > CLAW_INITIAL){
@@ -180,67 +203,34 @@ void setup() {
 void loop() {
 
   //Reset Display
-  /*
+  
   display.clearDisplay();
   display.setCursor(0,0);
-  turn_table_motor.set_pwm(3500);
-  turn_table_motor.go_to_position(23); //position 23 is 90 degrees
 
-  display.println(turn_table_motor.get_position());
-  display.display();
-  delayMicroseconds(5);
-  */
- int pos = 0;
- for (pos = 0; pos <= 90; pos += 1) { // goes from 0 degrees to 180 degrees
-    // in steps of 1 degree
-    claw_servo.write(pos);              // tell servo to go to position in variable 'pos'
-    delay(15);                       // waits 15ms for the servo to reach the position
-  }
-  for (pos = 90; pos >= 0; pos -= 1) { // goes from 180 degrees to 0 degrees
-    claw_servo.write(pos);              // tell servo to go to position in variable 'pos'
-    delay(15);                       // waits 15ms for the servo to reach the position
-  }
- 
- display.clearDisplay();
- display.setCursor(0,0);
- display.println("YES");
- int read = treasure_sonar_left.ping_cm();
- display.println(read);
- display.display();
-/*
- if (read < 15){
+  //offsets: 3 for turn table 
+
+  turn_table_motor.set_pwm(3000);
+  rack_n_pinion_motor.set_pwm(4000);
+
+  turn_table_motor.go_to_position(-20, display);
+  delay(200);
   claw_system.grab_large_treasure();
- delay(2000);
- claw_system.release_treasure();
- delay(2000);
- }
- delay(20);
- */
+
+
+
+
+  display.display();
+  delay(5000);
  
- /*
- claw_system.grab_large_treasure();
- delay(2000);
- claw_system.release_treasure();
- delay(2000);
-*/
+
+  /*display.display();
+  delayMicroseconds(5);*/
+  
+  
+}
 
 
-  /*
-  if(treasure_sonar_right.ping_cm()>=TREASURE_ONE){
-
-    turn_table_motor.table_turn(90,RIGHT);
-    rack_n_pinion_motor.claw_go(treasure_sonar_right.ping_cm(),FORWARD);
-    stepper_motor.descend(STEP_PER_CM*8);
-    int if_grab = claw_system.grab_treasure();
-    if (if_grab = 1){
-      stepper_motor.rise(STEP_PER_CM*8);
-      if (claw_system.if_lift_up()==1){
-        turn_table_motor.turn(0,LEFT);
-      }
-      
-    }
-  }
-  */
+  
 
 
 
@@ -329,7 +319,7 @@ void loop() {
   
 */
 
- }
+ 
 
 
   
