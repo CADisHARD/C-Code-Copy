@@ -109,9 +109,9 @@ NewPing treasure_sonar_right(TRIG_R,ECHO_R,MAXIMUM_DISTANCE);
 Servo claw_servo;
 
 //*****************CLAW SERVO ANGLE MEASUREMENT************
-#define CLAW_INITIAL 90
-#define CLAW_HALL 45
-#define CLAW_GRAB 5
+#define CLAW_INITIAL 170
+#define CLAW_HALL 150
+#define CLAW_GRAB 110
 
 ClawServoHall claw_system(claw_servo);
 
@@ -164,15 +164,17 @@ void setup() {
   int output_signal = 1;
 
   claw_servo.attach(PA0);
+  claw_servo.write(CLAW_HALL);
+
   int initial_position = claw_servo.read();
   while (initial_position > CLAW_INITIAL){
     claw_servo.write(initial_position);
-    delay(15);
+    delay(50);
     initial_position--;
   }
   while (initial_position < CLAW_INITIAL){
     claw_servo.write(initial_position);
-    delay(15);
+    delay(50);
     initial_position++;
   }
   
