@@ -15,7 +15,7 @@ class EncoderMotor{
         PinName PWM2;
         
         int motor_freq=1000;
-        int position = 0;
+        
         
        
         int PWM_value=3500;
@@ -36,6 +36,7 @@ class EncoderMotor{
     public:
 
         EncoderMotor();
+        int position = 0;
     
         EncoderMotor(uint32_t ENCA,uint32_t ENCB, PinName PWM1, PinName PWM2, int degrees_per_click, int enc_offset);
         int get_position(){return position;}
@@ -48,10 +49,12 @@ class EncoderMotor{
         void go();
         void stop();
         void read_encoder();
+        void turn_positions(int desired_position, int dir, Adafruit_SSD1306 display);
         void turn(int degrees, int dir);
         void go_distance(float distance, int dir);
         void go_to_position(int pos, Adafruit_SSD1306 display); 
         void claw_go(float distance, int dir);
+        void count_positions();
         
 };
 

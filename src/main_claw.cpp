@@ -1,3 +1,4 @@
+
 #include <Wire.h>
 #include <Adafruit_SSD1306.h>
 #include <NewPing.h>
@@ -28,7 +29,13 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 EncoderMotor rack_n_pinion_motor(ENCA_RP, ENCB_RP, PWM1_RP, PWM2_RP, 24, 5);
 void rack_read_encoder_wrapper();
 void rack_read_encoder_wrapper(){
-    rack_n_pinion_motor.read_encoder();
+    int b = digitalRead(ENCB_RP);
+    if(b > 0){
+        rack_n_pinion_motor.position++;
+    }
+    else{
+        rack_n_pinion_motor.position--;
+    }    
 }
 
 #define ENCA_TT PB0
@@ -42,7 +49,13 @@ void rack_read_encoder_wrapper(){
 EncoderMotor turn_table_motor(ENCA_TT, ENCB_TT, PWM1_TT, PWM2_TT, 24, 5);
 void turn_read_encoder_wrapper();
 void turn_read_encoder_wrapper(){
-    turn_table_motor.read_encoder();
+    int b = digitalRead(ENCB_TT);
+    if(b > 0){
+        turn_table_motor.position++;
+    }
+    else{
+        turn_table_motor.position--;
+    }  
 }
 
 
@@ -114,6 +127,8 @@ ClawServoHall claw_system(claw_servo);
 
 void pick_up_left(int left_value);
 
+int rack_has_gone = 0;
+
 
 void setup() {
 
@@ -181,47 +196,35 @@ void loop() {
   turn_table_motor.set_pwm(3000);
   rack_n_pinion_motor.set_pwm(4000);
 
-  display.println(treasure_sonar_right.ping_cm());
-  //display.display();
-
-  //delay(2000);
   rack_n_pinion_motor.go_to_position(12, display);
-  
-  int turn_pos = turn_table_motor.get_position();
-  
-  display.println(turn_pos);
-  display.println("finished loop");
+  delay(500);
 
-  //delay(5000);
+  noInterrupts();
+  delayMicroseconds(5);
+  interrupts();
+  delayMicroseconds(5);
+  detachInterrupt(ENCA_RP);
 
-  /*if(treasure_sonar_right.ping_cm()<15){
-    
-      //delay(500);
-      //rack_n_pinion_motor.go_to_position(12);
-  }*/
- 
-  
-  //display.println(turn_table_motor.get_position());
-  //display.println(rack_n_pinion_motor.get_position());
+  attachInterrupt(digitalPinToInterrupt(ENCA_TT),turn_read_encoder_wrapper,RISING);
+  turn_table_motor.go_to_position(-10, display);
+  delay(500);
+
+
+
+
 
   display.display();
-  delayMicroseconds(5);
-  /*
-  if(treasure_sonar_right.ping_cm()>=TREASURE_ONE){
+  delay(1);
+ 
 
-    turn_table_motor.table_turn(90,RIGHT);
-    rack_n_pinion_motor.claw_go(treasure_sonar_right.ping_cm(),FORWARD);
-    stepper_motor.descend(STEP_PER_CM*8);
-    int if_grab = claw_system.grab_treasure();
-    if (if_grab = 1){
-      stepper_motor.rise(STEP_PER_CM*8);
-      if (claw_system.if_lift_up()==1){
-        turn_table_motor.turn(0,LEFT);
-      }
-      
-    }
-  }
-  */
+  /*display.display();
+  delayMicroseconds(5);*/
+  
+  
+}
+
+
+  
 
 
 
@@ -310,7 +313,7 @@ void loop() {
   
 */
 
- }
+ 
 
 
   

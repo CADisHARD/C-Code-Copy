@@ -51,6 +51,8 @@ void EncoderMotor::stop(){
 }
 
 
+
+
 void EncoderMotor::read_encoder(){
 
     int b = digitalRead(ENCB);
@@ -63,6 +65,17 @@ void EncoderMotor::read_encoder(){
 
 
 }
+
+
+void EncoderMotor::count_positions(){
+
+    if(digitalRead(ENCA)==HIGH&&digitalRead(ENCB)==HIGH){
+        position++;
+    }
+
+}
+
+
 
 void EncoderMotor::go_to_position(int pos, Adafruit_SSD1306 display){
 
@@ -133,6 +146,30 @@ void EncoderMotor::go_to_position(int pos, Adafruit_SSD1306 display){
     }
     go_to_position(new_pos, display);
 }*/
+
+void EncoderMotor::turn_positions(int desired_position, int dir, Adafruit_SSD1306 display){
+
+    if(dir==-1){ //left aka cw
+
+        //double check this in real life or switch pwm pins
+        set_direction(-1);
+    }
+    else if(dir==1){ //right aka ccw
+        set_direction(1);
+    }
+
+    while(position<=desired_position){
+        go();
+        count_positions();
+        display.clearDisplay();
+        display.setCursor(0,0);
+        display.println(position);
+        display.display();
+    }
+
+    stop();
+
+}
 
 
 void EncoderMotor::go_distance(float distance, int dir){ //in inches
