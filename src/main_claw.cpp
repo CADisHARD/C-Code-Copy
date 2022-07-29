@@ -196,25 +196,15 @@ void loop() {
   turn_table_motor.set_pwm(3000);
   rack_n_pinion_motor.set_pwm(4000);
 
-  rack_n_pinion_motor.go_to_position(12, display);
-  delay(500);
-
-  noInterrupts();
-  delayMicroseconds(5);
-  interrupts();
-  delayMicroseconds(5);
-  detachInterrupt(ENCA_RP);
-
-  attachInterrupt(digitalPinToInterrupt(ENCA_TT),turn_read_encoder_wrapper,RISING);
-  turn_table_motor.go_to_position(-10, display);
-  delay(500);
-
+  turn_table_motor.go_to_position(-20, display);
+  delay(200);
+  claw_system.grab_large_treasure();
 
 
 
 
   display.display();
-  delay(1);
+  delay(5000);
  
 
   /*display.display();
