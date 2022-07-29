@@ -150,10 +150,11 @@ void setup() {
 
 
   claw_servo.attach(PA0);
-  claw_servo.write(CLAW_HALL);
-
-
   
+  //claw_servo.write(150);
+
+
+  /*
   int initial_position = claw_servo.read();
 
   while (initial_position > CLAW_INITIAL){
@@ -166,7 +167,7 @@ void setup() {
     delay(50);
     initial_position++;
   }
-  
+  */
 
 
   attachInterrupt(digitalPinToInterrupt(ENCA_RP),rack_read_encoder_wrapper,RISING);
@@ -189,6 +190,16 @@ void loop() {
   display.display();
   delayMicroseconds(5);
   */
+ int pos = 0;
+ for (pos = 0; pos <= 90; pos += 1) { // goes from 0 degrees to 180 degrees
+    // in steps of 1 degree
+    claw_servo.write(pos);              // tell servo to go to position in variable 'pos'
+    delay(15);                       // waits 15ms for the servo to reach the position
+  }
+  for (pos = 90; pos >= 0; pos -= 1) { // goes from 180 degrees to 0 degrees
+    claw_servo.write(pos);              // tell servo to go to position in variable 'pos'
+    delay(15);                       // waits 15ms for the servo to reach the position
+  }
  
  display.clearDisplay();
  display.setCursor(0,0);
@@ -196,7 +207,7 @@ void loop() {
  int read = treasure_sonar_left.ping_cm();
  display.println(read);
  display.display();
-
+/*
  if (read < 15){
   claw_system.grab_large_treasure();
  delay(2000);
@@ -204,6 +215,7 @@ void loop() {
  delay(2000);
  }
  delay(20);
+ */
  
  /*
  claw_system.grab_large_treasure();
