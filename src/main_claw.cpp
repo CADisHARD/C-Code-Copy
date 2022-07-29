@@ -25,7 +25,7 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 #define PWM2_RP PB_9
 #define PWM1_RP PB_8
 
-EncoderMotor rack_n_pinion_motor(ENCA_RP, ENCB_RP, PWM1_RP, PWM2_RP);
+EncoderMotor rack_n_pinion_motor(ENCA_RP, ENCB_RP, PWM1_RP, PWM2_RP, 24, 5);
 void rack_read_encoder_wrapper();
 void rack_read_encoder_wrapper(){
     rack_n_pinion_motor.read_encoder();
@@ -39,7 +39,7 @@ void rack_read_encoder_wrapper(){
 #define LEFT_POSITION 100
 #define RIGHT_POSITION 100
 
-EncoderMotor turn_table_motor(ENCA_TT, ENCB_TT, PWM1_TT, PWM2_TT);
+EncoderMotor turn_table_motor(ENCA_TT, ENCB_TT, PWM1_TT, PWM2_TT, 24, 5);
 void turn_read_encoder_wrapper();
 void turn_read_encoder_wrapper(){
     turn_table_motor.read_encoder();
@@ -73,8 +73,8 @@ StepperMotor stepper_motor;
 
 #define MAXIMUM_DISTANCE 4000
 
-NewPing treasure_sonar_right(TRIG_L,ECHO_L,MAXIMUM_DISTANCE); //right left as viewed from the top with back at y=0
-NewPing treasure_sonar_left(TRIG_R,ECHO_R,MAXIMUM_DISTANCE);
+NewPing treasure_sonar_left(TRIG_L,ECHO_L,MAXIMUM_DISTANCE); //right left as viewed from the top with back at y=0
+NewPing treasure_sonar_right(TRIG_R,ECHO_R,MAXIMUM_DISTANCE);
 
 //*****************DECLARE BP**************************
 
@@ -102,8 +102,8 @@ Servo claw_servo;
 
 ClawServoHall claw_system(claw_servo);
 
-#define LEFT 1
-#define RIGHT -1
+#define LEFT -1
+#define RIGHT 1
 
 //define threshold for each stage
 #define TREASURE_ONE 10
@@ -172,32 +172,40 @@ void setup() {
 void loop() {
 
   //Reset Display
-  /*
+  
   display.clearDisplay();
   display.setCursor(0,0);
-  turn_table_motor.set_pwm(3500);
-  turn_table_motor.go_to_position(23); //position 23 is 90 degrees
 
-  display.println(turn_table_motor.get_position());
+  //offsets: 3 for turn table 
+
+  turn_table_motor.set_pwm(3000);
+  rack_n_pinion_motor.set_pwm(4000);
+
+  display.println(treasure_sonar_right.ping_cm());
+  //display.display();
+
+  //delay(2000);
+  rack_n_pinion_motor.go_to_position(12, display);
+  
+  int turn_pos = turn_table_motor.get_position();
+  
+  display.println(turn_pos);
+  display.println("finished loop");
+
+  //delay(5000);
+
+  /*if(treasure_sonar_right.ping_cm()<15){
+    
+      //delay(500);
+      //rack_n_pinion_motor.go_to_position(12);
+  }*/
+ 
+  
+  //display.println(turn_table_motor.get_position());
+  //display.println(rack_n_pinion_motor.get_position());
+
   display.display();
   delayMicroseconds(5);
-  */
- display.clearDisplay();
- display.setCursor(0,0);
- display.println("YES");
- display.display();
- /*
- claw_system.grab_large_treasure();
- delay(50);
- claw_system.release_treasure();
-*/
-  //claw_servo.write(20);
-
-  if(treasure_sonar_right.ping_cm()>){
-
-
-  }
-
   /*
   if(treasure_sonar_right.ping_cm()>=TREASURE_ONE){
 
