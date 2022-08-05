@@ -23,6 +23,7 @@ int ClawServoHall::grab_treasure(){
     }
 
     int if_bomb = analogRead(HALL_PIN);
+    delay(500);
     
     if (if_bomb > 50){
         //if not bomb, pick up the treasure, and return 1 to indicate not bomb

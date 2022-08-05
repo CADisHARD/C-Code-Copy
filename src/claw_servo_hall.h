@@ -1,8 +1,8 @@
 #ifndef CLAW_SERVO_HALL
 #define CLAW_SERVO_HALL
-#define CLAW_INITIAL 170
-#define CLAW_HALL 150
-#define CLAW_GRAB 110
+#define CLAW_INITIAL 75
+#define CLAW_HALL 25
+#define CLAW_GRAB 0
 
 #include "Arduino.h"
 #include "Wire.h"
@@ -11,7 +11,7 @@
 class ClawServoHall{
     private:
 
-        uint32_t HALL_PIN = PA6;
+        uint32_t HALL_PIN = PA7;
         uint32_t MICRO_SWIRCH = PA3;
         Servo myservo;
 
