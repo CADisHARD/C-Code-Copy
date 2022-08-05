@@ -26,17 +26,9 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 #define PWM2_RP PB_9
 #define PWM1_RP PB_8
 
-EncoderMotor rack_n_pinion_motor(ENCA_RP, ENCB_RP, PWM1_RP, PWM2_RP, 24, 5);
-void rack_read_encoder_wrapper();
-void rack_read_encoder_wrapper(){
-    int b = digitalRead(ENCB_RP);
-    if(b > 0){
-        rack_n_pinion_motor.position++;
-    }
-    else{
-        rack_n_pinion_motor.position--;
-    }    
-}
+volatile int cccounter = 0;
+
+
 
 #define ENCA_TT PB0
 #define ENCB_TT PB1
@@ -46,31 +38,39 @@ void rack_read_encoder_wrapper(){
 #define LEFT_POSITION 100
 #define RIGHT_POSITION 100
 
+
+volatile int inter_counter = 0;
+volatile int position_rp=0;
+volatile int position_tt=0;
+
+
 EncoderMotor turn_table_motor(ENCA_TT, ENCB_TT, PWM1_TT, PWM2_TT, 24, 5);
 void turn_read_encoder_wrapper();
 void turn_read_encoder_wrapper(){
-    int b = digitalRead(ENCB_TT);
-    if(b > 0){
-        turn_table_motor.position++;
-    }
-    else{
-        turn_table_motor.position--;
-    }  
+    turn_table_motor.read_encoder();
+}
+
+EncoderMotor rack_n_pinion_motor(ENCA_RP, ENCB_RP, PWM1_RP, PWM2_RP, 24, 5);
+void rack_read_encoder_wrapper();
+void rack_read_encoder_wrapper(){
+    rack_n_pinion_motor.read_encoder();
 }
 
 
 //*****************DECLARE STEPPER*************
 
-#define STP PA10
-#define DIR PA11
-#define EN PA12
-#define MS1 PA15
+#define STP PA12
+#define DIR PA11  
+#define EN PA15
+#define MS1 PA10
 #define MS2 PB3
+
+
 
 #define STEP_PER_CM 310
 #define STEP_PER_IN 788
 
-StepperMotor stepper_motor;
+StepperMotor stepper_motor(STP,DIR,EN,MS1,MS2);
 
 //**********************DECLARE HALL SENSOR**************
 
@@ -127,11 +127,13 @@ ClawServoHall claw_system(claw_servo);
 
 void pick_up_left(int left_value);
 
-<<<<<<< HEAD
-=======
 int rack_has_gone = 0;
 
->>>>>>> 2d77c7977d0f41fb93dab064ffb9cac5f9527519
+void read_encoder_turn_table();
+void read_encoder_rack_pinion();
+void go_to_position_tt(int pos);
+void go_to_position_rp(int pos);
+
 
 void setup() {
 
@@ -141,7 +143,7 @@ void setup() {
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
   display.setCursor(0,0);
-  display.println("Done");
+  display.println("STARTING SEQUENCE...");
   display.display();
 
   pinMode(TRIG_L,OUTPUT);
@@ -168,16 +170,8 @@ void setup() {
 
 
   claw_servo.attach(PA0);
-<<<<<<< HEAD
-  
-  //claw_servo.write(150);
-
-
-  /*
-=======
   claw_servo.write(CLAW_HALL);
 
->>>>>>> 2d77c7977d0f41fb93dab064ffb9cac5f9527519
   int initial_position = claw_servo.read();
 
   while (initial_position > CLAW_INITIAL){
@@ -190,15 +184,14 @@ void setup() {
     delay(50);
     initial_position++;
   }
-  */
 
-
-  attachInterrupt(digitalPinToInterrupt(ENCA_RP),rack_read_encoder_wrapper,RISING);
-  attachInterrupt(digitalPinToInterrupt(ENCA_TT),turn_read_encoder_wrapper,RISING);
+  attachInterrupt(digitalPinToInterrupt(ENCA_RP),read_encoder_rack_pinion,RISING);
+  attachInterrupt(digitalPinToInterrupt(ENCA_TT),read_encoder_turn_table,RISING);
 
   delay(2000);
 }
 
+int counter =0;
 
 void loop() {
 
@@ -209,25 +202,90 @@ void loop() {
 
   //offsets: 3 for turn table 
 
-  turn_table_motor.set_pwm(3000);
+
+  turn_table_motor.set_pwm(3900);
   rack_n_pinion_motor.set_pwm(4000);
 
-  turn_table_motor.go_to_position(-20, display);
-  delay(200);
-  claw_system.grab_large_treasure();
+  go_to_position_tt(-20);
+  delay(2000);
+  go_to_position_rp(12);
+//display.display();
+  
+  
+  //delay(300);
+  //stepper_motor.rise();
+  //display.println("done with stepper");
+  //display.display();
+  //delay(2000);
+  //rack_n_pinion_motor.go_to_position(12, &display);
+  //display.println("done with rack and pinion");
+  //display.display();
+  //delay(2000);
+  //display.println("start garbage reading");
+  //digitalWrite(PB5, HIGH);
+  //display.println(digitalRead(PB5));
+  //display.println("finished with garbage reading");
+  //display.display();
+  //delay(2000);
+  //turn_table_motor.go_to_position(-20, &display);
+  //display.println("done with turn table");
+  //display.display();
+  //delay(2000);
+  //turn_table_motor.go_to_position(0, &display);
+  //delay(2000);
 
 
+  // display.println("started moving rack");
+  // display.println(rack_n_pinion_motor.position);
+  // delay(5000);
+  //display.println(turn_table_motor.position);
+  //display.println(rack_n_pinion_motor.position);
+  //display.display();
 
-
+  //rack_n_pinion_motor.go_to_position(12, &display);
+  //display.println("finished rack n pinion");
+  //display.display();
+  //delay(2000);
+  //stepper_motor.rise();
+  //delay(2000);
+  //display.println("done");
   display.display();
-  delay(5000);
+  delay(200);
+  //turn_table_motor.go_to_position(-20, &display);
+
+  
+
+}
+
+  
+  
+  //  display.println("Finished moving rack");
+  // display.println(rack_n_pinion_motor.position);
+
+  // display.display();
+
+  // display.println("started moving table");
+  // display.println(turn_table_motor.position);
+  // delay(5000);
+  
+  // display.println("Finished moving table");
+  // display.println(turn_table_motor.position);
+  // display.display();
+  // //claw_system.grab_large_treasure();
+  // delay(5000);
+  // display.print("Turntable pos: ");
+  // display.println(turn_table_motor.position);
+  // display.print("Rack pos: ");
+  // display.println(rack_n_pinion_motor.position);
+  // display.display();
+  // delay(1);
  
 
   /*display.display();
   delayMicroseconds(5);*/
   
   
-}
+
 
 
   
@@ -319,19 +377,141 @@ void loop() {
   
 */
 
+
+
+void read_encoder_rack_pinion(){
+
+  int b = digitalRead(ENCB_RP);
+    if(b == HIGH){
+        position_rp++;
+    }
+    else{
+        position_rp--;
+    }   
+
+}
+
+void read_encoder_turn_table(){
+
+  int b = digitalRead(ENCB_TT);
+    if(b == HIGH){
+        position_tt++;
+    }
+    else{
+        position_tt--;
+    }  
+
+}
  
+#define ENCODER_OFFSET 5
 
+void go_to_position_tt(int pos){
 
-  
+    if(pos-ENCODER_OFFSET<position_tt&&position_tt<pos+ENCODER_OFFSET){
+        turn_table_motor.stop();
+        display.clearDisplay();
+         display.setCursor(0,0);
+         display.println(position_tt);
+         display.display();
+    }
+    else if(pos>position_tt){
 
+        turn_table_motor.set_direction(-1);
+        while(position_tt<pos){
+             display.clearDisplay();
+             display.setCursor(0,0);
+             display.println(position_tt);
+             display.display();
+            turn_table_motor.go();
+            delayMicroseconds(5);
+        }
+        turn_table_motor.stop();
+        delay(100);
 
-/*
-void pick_up_left(int left_value){
-  turn_table_motor.table_turn(90,1);
-  rack_n_pinion_motor.claw_go(left_value,1);
-  stepper_motor.descend(STEP_PER_IN*)
+    }
+    else if(pos-ENCODER_OFFSET<position_tt&&position_tt<pos+ENCODER_OFFSET){
+       turn_table_motor.stop();
+    }
+    else if(pos<position_tt){
 
+        //check the direction irl
+        turn_table_motor.set_direction(1);
+        while(position_tt>pos){
+             display.clearDisplay();
+             display.setCursor(0,0);
+             display.println(position_tt);
+             display.display();
+            turn_table_motor.go();
+            delayMicroseconds(5);//do we need this delay?
+        }
+        turn_table_motor.stop();
+        delay(100);
+
+    }
+    else if(pos-ENCODER_OFFSET<position_tt&&position_tt<pos+ENCODER_OFFSET){
+       turn_table_motor.stop();
+        display.clearDisplay();
+        display.setCursor(0,0);
+        display.println(position_tt);
+        display.display();
+    }
 
 
 }
-*/
+
+void go_to_position_rp(int pos){
+
+    if(pos-ENCODER_OFFSET<position_rp&&position_rp<pos+ENCODER_OFFSET){
+        rack_n_pinion_motor.stop();
+        display.clearDisplay();
+         display.setCursor(0,0);
+         display.println(position_rp);
+         display.display();
+    }
+    else if(pos>position_rp){
+
+        rack_n_pinion_motor.set_direction(-1);
+        while(position_rp<pos){
+             display.clearDisplay();
+             display.setCursor(0,0);
+             display.println(position_rp);
+             display.display();
+            rack_n_pinion_motor.go();
+            delayMicroseconds(5);
+        }
+        rack_n_pinion_motor.stop();
+        delay(100);
+
+    }
+    else if(pos-ENCODER_OFFSET<position_rp&&position_rp<pos+ENCODER_OFFSET){
+       rack_n_pinion_motor.stop();
+    }
+    else if(pos<position_rp){
+
+        //check the direction irl
+        rack_n_pinion_motor.set_direction(1);
+        while(position_rp>pos){
+             display.clearDisplay();
+             display.setCursor(0,0);
+             display.println(position_rp);
+             display.display();
+            rack_n_pinion_motor.go();
+            delayMicroseconds(5);//do we need this delay?
+        }
+        rack_n_pinion_motor.stop();
+        delay(100);
+
+    }
+    else if(pos-ENCODER_OFFSET<position_rp&&position_rp<pos+ENCODER_OFFSET){
+       rack_n_pinion_motor.stop();
+        display.clearDisplay();
+        display.setCursor(0,0);
+        display.println(position_rp);
+        display.display();
+    }
+
+
+}
+
+
+
