@@ -61,11 +61,11 @@ void turn_read_encoder_wrapper(){
 
 //*****************DECLARE STEPPER*************
 
-#define STP PA10
+#define STP PA12
 #define DIR PA11
-#define EN PA12
-#define MS1 PA15
-#define MS2 PB3
+#define EN PB3
+#define MS1 PA10
+#define MS2 PA15
 
 #define STEP_PER_CM 310
 #define STEP_PER_IN 788
@@ -74,7 +74,7 @@ StepperMotor stepper_motor;
 
 //**********************DECLARE HALL SENSOR**************
 
-#define HALL PA6
+#define HALL PA7
 
 //**********DECLARE SONARS*****************************
 
@@ -88,12 +88,6 @@ StepperMotor stepper_motor;
 
 NewPing treasure_sonar_left(TRIG_L,ECHO_L,MAXIMUM_DISTANCE); //right left as viewed from the top with back at y=0
 NewPing treasure_sonar_right(TRIG_R,ECHO_R,MAXIMUM_DISTANCE);
-
-//*****************DECLARE BP**************************
-
-#define COMMIN PA5
-#define COMMOUT PA4
-
 
 
 //****************DECLARE MICROSWITCHES******************
@@ -109,75 +103,97 @@ NewPing treasure_sonar_right(TRIG_R,ECHO_R,MAXIMUM_DISTANCE);
 Servo claw_servo;
 
 //*****************CLAW SERVO ANGLE MEASUREMENT************
-#define CLAW_INITIAL 170
-#define CLAW_HALL 150
-#define CLAW_GRAB 110
+#define CLAW_INITIAL 75
+#define CLAW_HALL 45
+#define CLAW_GRAB 0
 
 ClawServoHall claw_system(claw_servo);
 
 #define LEFT -1
 #define RIGHT 1
 
-//define threshold for each stage
+//*********************THRESHOLD VALUES******************
 #define TREASURE_ONE 10
 #define THEASURE_TWO 10
 #define ARCH_DISTANCE 10
 #define TREASURE_THREE 10
 #define TREASURE_FOUR 10
 
-void pick_up_left(int left_value);
+//*********************COURSE PROPERTIES********************
 
-<<<<<<< HEAD
-=======
+#define STOP 0
+#define TAPE 1
+#define ARCH_FIRST_TREASURE 2
+#define ARCH_SECOND_TREASURE 3
+#define BRIDGE 4
+#define DUMP_TREASURE 5
+#define GOLDEN_TREASURE 6
+#define REVERSE 7
+
+int stage = TAPE;
+int treasure_count = 0;
+
+#define COMM1 PA4 //abc -> a
+#define COMM2 PA5 //abc -> b
+#define COMM3 PA6 //abc -> c
+
+
+
+
 int rack_has_gone = 0;
 
->>>>>>> 2d77c7977d0f41fb93dab064ffb9cac5f9527519
+void send_message(int value);
+
 
 void setup() {
 
+  //setup for the screen
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
   
   display.clearDisplay();
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
   display.setCursor(0,0);
-  display.println("Done");
+  display.println("???????");
   display.display();
 
+
+  //setup for bluepill communication
+  pinMode(COMM1,OUTPUT);
+  pinMode(COMM2,OUTPUT);
+  pinMode(COMM3,OUTPUT);
+
+  
+  //setup for sonar sensor
   pinMode(TRIG_L,OUTPUT);
   pinMode(ECHO_L,INPUT);
   pinMode(TRIG_R,OUTPUT);
   pinMode(ECHO_R,INPUT);
 
-  //setup for bluepill communication
-  pinMode(COMMIN,INPUT);
-  pinMode(COMMOUT,OUTPUT);
+  
 
   //setup for claw components
   pinMode(SERVO_CLAW, OUTPUT);
-  pinMode (HALL, INPUT);
-  pinMode (MS_GRAB, INPUT);
+  pinMode(HALL, INPUT);
+  pinMode(MS_GRAB, INPUT);
+  
+
+  //setup for limit switches
+  pinMode(MS_HORIZ,INPUT);
+  pinMode(MS_VERT,INPUT);
+  
 
   //setup for stepper motor
   stepper_motor.resetEDPins();
   digitalWrite(EN, LOW);
   delay(300);
 
-  int stage = 0;
-  int output_signal = 1;
-
-
-  claw_servo.attach(PA0);
-<<<<<<< HEAD
+  //initialize the claw
   
-  //claw_servo.write(150);
-
-
-  /*
-=======
+  claw_servo.attach(PA0);
   claw_servo.write(CLAW_HALL);
+  delay(200);
 
->>>>>>> 2d77c7977d0f41fb93dab064ffb9cac5f9527519
   int initial_position = claw_servo.read();
 
   while (initial_position > CLAW_INITIAL){
@@ -190,13 +206,16 @@ void setup() {
     delay(50);
     initial_position++;
   }
-  */
+  
 
-
+  //attach interrupt for encoders
   attachInterrupt(digitalPinToInterrupt(ENCA_RP),rack_read_encoder_wrapper,RISING);
   attachInterrupt(digitalPinToInterrupt(ENCA_TT),turn_read_encoder_wrapper,RISING);
+  
+  
 
-  delay(2000);
+  delay(200);
+  
 }
 
 
@@ -207,26 +226,175 @@ void loop() {
   display.clearDisplay();
   display.setCursor(0,0);
 
-  //offsets: 3 for turn table 
+  delay(30);
+  
+  //get sonar sensor values
+  int left_distance = treasure_sonar_left.ping_cm();
+  int right_distance = treasure_sonar_right.ping_cm();
 
-  turn_table_motor.set_pwm(3000);
-  rack_n_pinion_motor.set_pwm(4000);
+  display.println(left_distance);
+  display.println(right_distance);
+  display.display();
 
-  turn_table_motor.go_to_position(-20, display);
-  delay(200);
+
+  
+  if (stage == TAPE){
+    if (left_distance <= 5 && right_distance <= 5){
+      stage++;
+      delay(20);
+    }
+    else if (right_distance <= 10){
+      send_message(STOP);
+      //pick up treasure
+    }
+    else{
+      send_message(stage);
+    }
+  }
+  else if (stage==ARCH_FIRST_TREASURE){
+    if (left_distance <= 10){
+      send_message(STOP);
+      //pick up treasure
+      
+      
+      stage++;
+    }
+    else{
+      send_message(stage);
+    }
+
+  }
+  else if (stage==ARCH_SECOND_TREASURE){
+    if (right_distance <= 10){
+      send_message(STOP);
+      //pick up treasure
+      
+      
+      stage++;
+    }
+    else{
+      send_message(stage);
+    }
+
+  }
+  else if (stage==BRIDGE){
+    if (left_distance <= 10){
+      send_message(STOP);
+      //pick up treasure
+      
+      
+      stage++;
+    }
+    else{
+      send_message(stage);
+    }
+
+  }
+  else if (stage==DUMP_TREASURE){
+    if (left_distance <= 10){
+      send_message(STOP);
+      //pick up treasure
+      
+      
+      stage++;
+    }
+    else{
+      send_message(stage);
+    }
+  }
+  else if (stage==GOLDEN_TREASURE){
+    send_message(stage);
+  }
+
+
+
+
+
+  /*
+  display.println(analogRead(HALL));
+  display.display();
+  claw_system.grab_treasure();
+  delay(3000);
+  claw_system.release_treasure();
+  delay(1000);
+  */
+
+
+
+/*
+
+
+  if (right_distance <= 30){
+    digitalWrite(COMM1,0);
+    digitalWrite(COMM2,0);
+    digitalWrite(COMM3,0);
+    display.println("STOP!!!!!!!!");
+        display.display();
+    delay(500);
+    rack_n_pinion_motor.set_pwm(3500);
+    rack_n_pinion_motor.set_direction(FORWARD);
+    rack_n_pinion_motor.go();
+
+
+
+  }
+  else{
+    digitalWrite(COMM1,0);
+    digitalWrite(COMM2,0);
+    digitalWrite(COMM3,1);
+    display.println("TAPE");
+    display.display();
+
+  }
+  delay(30);
+  */
+  
+/*
   claw_system.grab_large_treasure();
 
+  delay(3000);
+  claw_system.release_treasure();
 
+   delay(3000);
+   
+   */
 
+  //offsets: 3 for turn table 
 
-  display.display();
-  delay(5000);
- 
+  //turn_table_motor.set_pwm(3000);
+  //rack_n_pinion_motor.set_pwm(4000);
 
+  //turn_table_motor.go_to_position(-20, display);
+  
+  //claw_system.grab_large_treasure();
+  
   /*display.display();
   delayMicroseconds(5);*/
   
-  
+}
+
+void send_message(int value){
+  int first = 0;
+  int second = 0;
+  int third = 0;
+  int output_value = value;
+
+  if (output_value/4 != 0){
+    output_value = output_value - 4;
+    first = 1;
+  }
+  if (output_value/2 != 0){
+    output_value = output_value -2;
+    second = 1;
+  }
+  if (output_value != 0){
+    third = 1;
+  }
+
+  digitalWrite(COMM1,first);
+  digitalWrite(COMM2,second);
+  digitalWrite(COMM3,third);
+
 }
 
 
