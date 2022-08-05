@@ -15,7 +15,7 @@ class StepperMotor{
 
     public:
     
-    StepperMotor();
+    StepperMotor(uint32_t stp,uint32_t dir,uint32_t en,uint32_t ms1,uint32_t ms2);
     void rise();
     void rise(int steps);
     void descend();

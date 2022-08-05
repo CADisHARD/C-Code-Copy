@@ -21,7 +21,7 @@ int edge_threshold = 10;
 const char *unit = "cm";
 long duration; // variable for the duration of sound wave travel
 int distance;
-#define trigPin PA9
+#define trigPin PA9 //overlaps with pwm1_L
 #define echoPin PA10
 
 
