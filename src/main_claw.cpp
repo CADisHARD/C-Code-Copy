@@ -104,7 +104,6 @@ Servo claw_servo;
 
 //*****************CLAW SERVO ANGLE MEASUREMENT************
 #define CLAW_INITIAL 75
-#define CLAW_HALL 45
 #define CLAW_GRAB 0
 
 ClawServoHall claw_system(claw_servo);
@@ -142,15 +141,11 @@ int treasure_count = 0;
 
 int rack_has_gone = 0;
 
-<<<<<<< HEAD
-void send_message(int value);
-=======
 void read_encoder_turn_table();
 void read_encoder_rack_pinion();
 void go_to_position_tt(int pos);
 void go_to_position_rp(int pos);
->>>>>>> f167685233897343291538aa8bfb7f496c66d675
-
+void send_message(int value);
 
 void setup() {
 
@@ -161,11 +156,7 @@ void setup() {
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
   display.setCursor(0,0);
-<<<<<<< HEAD
-  display.println("???????");
-=======
   display.println("STARTING SEQUENCE...");
->>>>>>> f167685233897343291538aa8bfb7f496c66d675
   display.display();
 
 
@@ -199,18 +190,11 @@ void setup() {
   digitalWrite(EN, LOW);
   delay(300);
 
-<<<<<<< HEAD
   //initialize the claw
   
-=======
-  int stage = 0;
-  int output_signal = 1;
-
-
->>>>>>> f167685233897343291538aa8bfb7f496c66d675
   claw_servo.attach(PA0);
-  claw_servo.write(CLAW_HALL);
-  delay(200);
+  claw_servo.write((CLAW_INITIAL+CLAW_GRAB)/2);
+  delay(1000);
 
   int initial_position = claw_servo.read();
 
@@ -240,9 +224,11 @@ void loop() {
   
   display.clearDisplay();
   display.setCursor(0,0);
+  display.println(analogRead(HALL));
+  display.display();
 
   delay(30);
-  
+/*
   //get sonar sensor values
   int left_distance = treasure_sonar_left.ping_cm();
   int right_distance = treasure_sonar_right.ping_cm();
@@ -250,9 +236,9 @@ void loop() {
   display.println(left_distance);
   display.println(right_distance);
   display.display();
+*/
 
-
-  
+  /*
   if (stage == TAPE){
     if (left_distance <= 5 && right_distance <= 5){
       stage++;
@@ -319,7 +305,7 @@ void loop() {
   }
   else if (stage==GOLDEN_TREASURE){
     send_message(stage);
-  }
+  }*/
 
   
   
@@ -341,21 +327,39 @@ void loop() {
 
 
 
+
 /*
 
-
   if (right_distance <= 30){
-    digitalWrite(COMM1,0);
-    digitalWrite(COMM2,0);
-    digitalWrite(COMM3,0);
+    send_message(0);
     display.println("STOP!!!!!!!!");
         display.display();
     delay(500);
-    rack_n_pinion_motor.set_pwm(3500);
-    rack_n_pinion_motor.set_direction(FORWARD);
-    rack_n_pinion_motor.go();
+    rack_n_pinion_motor.set_pwm(6000);
+    turn_table_motor.set_pwm(3675);
 
+    go_to_position_tt(20);
+    delay(500);
+    //go_to_position_rp(-5);
+    delay(500);
+    stepper_motor.descend(3250);
+    delay(500);
+    claw_system.grab_treasure();
+    delay(1000);
+    stepper_motor.rise(3250);
+    delay(500);
+    turn_table_motor.set_pwm(3800);
+    //go_to_position_tt(-1);
+    //delay(500);
+    go_to_position_tt(0);
+    //go_to_position_rp(0);
+    delay(500);
+    claw_system.release_treasure();
 
+    delay(200);
+
+    send_message(1);
+    delay(3000);
 
   }
   else{
@@ -366,8 +370,8 @@ void loop() {
     display.display();
 
   }
-  delay(30);
-  */
+  delay(30);*/
+  
   
 /*
   claw_system.grab_large_treasure();
@@ -533,7 +537,7 @@ void read_encoder_turn_table(){
 
 }
  
-#define ENCODER_OFFSET 5
+#define ENCODER_OFFSET 2
 
 void go_to_position_tt(int pos){
 
