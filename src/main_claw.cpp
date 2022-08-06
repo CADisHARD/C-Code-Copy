@@ -1,4 +1,4 @@
-
+/*
 #include <Wire.h>
 #include <Adafruit_SSD1306.h>
 #include <NewPing.h>
@@ -314,6 +314,7 @@ void loop() {
 
   // display.display();
 
+  
 
 
   /*
@@ -394,7 +395,7 @@ void loop() {
   
   /*display.display();
   delayMicroseconds(5);*/
-  
+  /*
 }
 
 void send_message(int value){
@@ -512,7 +513,7 @@ void send_message(int value){
 */
 
 
-
+/*
 void read_encoder_rack_pinion(){
 
   int b = digitalRead(ENCB_RP);
@@ -536,8 +537,8 @@ void read_encoder_turn_table(){
     }  
 
 }
- 
-#define ENCODER_OFFSET 2
+
+#define ENCODER_OFFSET 5
 
 void go_to_position_tt(int pos){
 
@@ -647,5 +648,6 @@ void go_to_position_rp(int pos){
 
 }
 
+*/
 
 

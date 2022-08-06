@@ -40,7 +40,7 @@ class TapeSensors{
         float D=0;
         float kp=100;
         float ki=0.0005;
-        float kd = 1000;
+        float kd = 10000;
         int position=0;
         int error=0;
         int last_error=0;
