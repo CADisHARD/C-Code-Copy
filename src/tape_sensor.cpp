@@ -35,8 +35,6 @@ void TapeSensors::read_tape(){
     current_sensor_values[1]=get_norm_M_val();
     current_sensor_values[2]=get_norm_R_val();
 
-    if
-
     get_error();
 
 }

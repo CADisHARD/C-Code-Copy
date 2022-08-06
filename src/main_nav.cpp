@@ -13,6 +13,9 @@
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
 #define OLED_RESET 	-1 // This display does not have a reset pin accessible
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+void oled_setup();
+void print_in_loop(int number);
+void print_in_loop(const char *text);
 
 //*******************DECLARE TAPE SENSORS**********************
 TapeSensors tpsens;
@@ -36,9 +39,6 @@ EncoderMotor right_motor(ENCA_R, ENCB_R, PWM1_R, PWM2_R, 145, 5);
 
 EncoderMotor left_motor(ENCA_L, ENCB_L, PWM1_L, PWM2_L, 145, 5);
 
-void right_motor_encoder_wrapper();
-void left_motor_encoder_wrapper();
-
 
 #define FORWARD 1
 #define BACKWARD -1
@@ -52,21 +52,15 @@ float speed_left=INITIAL_TAPE_SPEED;
 int position_right=0;
 int position_left=0;
 
+#define ENCODER_OFFSET 5
+
 void speed_check(float speed_diff);
 
+void read_encoder_right();
+void read_encoder_left();
 
-//*****************DECLARE ULTRASONIC SENSORS (EDGE DETECTION)**********
-
-#define LEFT_EDGE_TRIG PA9
-#define LEFT_EDGE_ECHO PA10
-
-UltrasonicSensor left_edge_detector(LEFT_EDGE_TRIG, LEFT_EDGE_ECHO);
-
-#define RIGHT_EDGE_TRIG PA11
-#define RIGHT_EDGE_ECHO PA12
-
-UltrasonicSensor right_edge_detector(RIGHT_EDGE_TRIG, RIGHT_EDGE_ECHO);
-
+void go_to_position_right(int pos);
+void go_to_position_left(int pos);
 
 //************************DECLARE GYROSCOPE**********************
 Adafruit_MPU6050 mpu;
@@ -82,6 +76,7 @@ long current_time=0;
 #define RIGHT 1
 #define LEFT -1
 
+void gyro_setup();
 void gyro_turn(int angle, int direction);
 void get_gyro_angle();
 float gyro_pid_correction();
@@ -102,22 +97,14 @@ float gyro_pid_correction();
 #define IN3 PA6
 
 int read_claw_message();
-
-//***************************COURSE PROPERTIES*****************************
-
 int treasures_picked_up = 0;
 
-//**************************SETUP******************************************
 
-
-void oled_setup();
-void gyro_setup();
 void setup() {
 
-
   oled_setup();
-  attachInterrupt(digitalPinToInterrupt(ENCA_R),right_motor_encoder_wrapper,RISING);
-  attachInterrupt(digitalPinToInterrupt(ENCA_L),left_motor_encoder_wrapper,RISING);
+  attachInterrupt(digitalPinToInterrupt(ENCA_R),read_encoder_right,RISING);
+  attachInterrupt(digitalPinToInterrupt(ENCA_L),read_encoder_left,RISING);
   gyro_setup();
   tpsens.initial_reading();
 
@@ -131,26 +118,19 @@ void setup() {
 
 void loop(){
 
-  //TAPE FOLLOWING
-  //Reset Display
-
-  //HAL_GPIO_ReadPin()
-
   int message = TAPE;
 
   if(message==STOP){
     right_motor.stop();
     left_motor.stop();
-    display.clearDisplay();
-    display.setCursor(0,0);
-    display.println("STOP");
-    display.display();
+    print_in_loop("STOP");
     delay(2000);
   }
   else if(message==TAPE){
 
     display.clearDisplay();
     display.setCursor(0,0);
+    display.println("STAGE I: TAPE-FOLLOWING");
 
     right_motor.set_direction(FORWARD);
     left_motor.set_direction(FORWARD);
@@ -177,13 +157,9 @@ void loop(){
     float speed_diff = tpsens.follow_tape_speed_correction();
     speed_check(speed_diff);
 
-    
-
-    display.println(speed_diff);
     display.println(speed_right);
     display.println(speed_left);
-      
-      
+    
     display.display();
     delayMicroseconds(5);
 
@@ -191,10 +167,7 @@ void loop(){
 
   else if(message==REVERSE){
 
-    display.clearDisplay();
-    display.setCursor(0,0);
-    display.println("REVERSE");
-    display.display();
+    print_in_loop("REVERSE");
 
     right_motor.set_direction(BACKWARD);
     left_motor.set_direction(BACKWARD);
@@ -206,18 +179,12 @@ void loop(){
     left_motor.go();
   }
 
-  /*display.clearDisplay();
-  display.setCursor(0,0);
-
-  get_gyro_angle();
-  display.println(gyro_angle);
-
-  //display.drawBitmap(0, 0, compass_bitmap, 128, 64, WHITE);
-  display.display();
-  delayMicroseconds(5);*/
   
   
 }
+
+
+//*********************FUNCTIONS****************************************
 
 void speed_check(float speed_diff){
 
@@ -362,4 +329,144 @@ float gyro_pid_correction(){
 
   return motorspeed;
 
+}
+
+
+void read_encoder_right(){
+
+  int b = digitalRead(ENCB_R);
+    if(b == HIGH){
+        position_right++;
+    }
+    else{
+        position_right--;
+    }   
+
+}
+
+void read_encoder_left(){
+
+  int b = digitalRead(ENCB_L);
+    if(b == HIGH){
+        position_left++;
+    }
+    else{
+        position_left--;
+    }  
+
+}
+ 
+//the directions can be customized to the wheel so we don't have to replug wires!!!
+
+void go_to_position_right(int pos){
+
+  if(pos-ENCODER_OFFSET<position_right&&position_right<pos+ENCODER_OFFSET){
+
+    right_motor.stop();
+    print_in_loop(position_right);
+    
+  }
+  else if(pos>position_right){
+
+    right_motor.set_direction(BACKWARD);
+
+    while(position_right<pos){
+
+      print_in_loop(position_right);
+      right_motor.go();
+      delayMicroseconds(5);
+    }
+
+    right_motor.stop();
+    delay(100);
+
+  }
+  else if(pos-ENCODER_OFFSET<position_right&&position_right<pos+ENCODER_OFFSET){
+
+    right_motor.stop();
+  }
+  else if(pos<position_right){
+
+    right_motor.set_direction(FORWARD);
+
+    while(position_right>pos){
+      print_in_loop(position_right);
+      right_motor.go();
+      delayMicroseconds(5);
+    }
+    right_motor.stop();
+    delay(100);
+
+  }
+  else if(pos-ENCODER_OFFSET<position_right&&position_right<pos+ENCODER_OFFSET){
+
+    right_motor.stop();
+    print_in_loop(position_right);
+
+  }
+
+}
+
+void go_to_position_left(int pos){
+
+  if(pos-ENCODER_OFFSET<position_left&&position_left<pos+ENCODER_OFFSET){
+
+    left_motor.stop();
+    print_in_loop(position_left);
+    
+  }
+  else if(pos>position_left){
+
+    left_motor.set_direction(BACKWARD);
+
+    while(position_left<pos){
+
+      print_in_loop(position_left);
+      left_motor.go();
+      delayMicroseconds(5);
+    }
+
+    left_motor.stop();
+    delay(100);
+
+  }
+  else if(pos-ENCODER_OFFSET<position_left&&position_left<pos+ENCODER_OFFSET){
+
+    left_motor.stop();
+  }
+  else if(pos<position_left){
+
+    left_motor.set_direction(FORWARD);
+
+    while(position_left>pos){
+      print_in_loop(position_left);
+      left_motor.go();
+      delayMicroseconds(5);
+    }
+    left_motor.stop();
+    delay(100);
+
+  }
+  else if(pos-ENCODER_OFFSET<position_left&&position_left<pos+ENCODER_OFFSET){
+
+    left_motor.stop();
+    print_in_loop(position_left);
+    
+  }
+
+}
+
+
+void print_in_loop(int number){
+  display.clearDisplay();
+  display.setCursor(0,0);
+  display.println(number);
+  display.display();
+}
+
+void print_in_loop(const char *text){
+  display.clearDisplay();
+  display.setCursor(0,0);
+  display.println(text);
+  display.display();
 }
