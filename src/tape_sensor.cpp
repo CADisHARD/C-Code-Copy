@@ -35,6 +35,8 @@ void TapeSensors::read_tape(){
     current_sensor_values[1]=get_norm_M_val();
     current_sensor_values[2]=get_norm_R_val();
 
+    if
+
     get_error();
 
 }
@@ -137,11 +139,18 @@ const char *TapeSensors::get_error(){
 
 int TapeSensors::get_norm_L_val(){
    
-   if(raw_L_val<50){
+   /*if(raw_L_val<50){
     normalized_L_val=0; //off the tape
    }
    else if(raw_L_val>=50){
     normalized_L_val=1; //on the tape
+   }*/
+
+   if(raw_L_val<=40){
+    normalized_L_val=0;
+   }
+   else if(raw_L_val>40){
+    normalized_L_val=1;
    }
 
    return normalized_L_val;
@@ -149,11 +158,11 @@ int TapeSensors::get_norm_L_val(){
 }
 int TapeSensors::get_norm_M_val(){
 
-    if(raw_M_val<45){
-    normalized_M_val=0; //off the tape
+   if(raw_M_val<=40){
+    normalized_M_val=0;
    }
-   else if(raw_M_val>=50){
-    normalized_M_val=1; //on the tape
+   else if(raw_M_val>40){
+    normalized_M_val=1;
    }
 
    return normalized_M_val;
@@ -161,11 +170,11 @@ int TapeSensors::get_norm_M_val(){
 }
 int TapeSensors::get_norm_R_val(){
 
-    if(raw_R_val<40){
-    normalized_R_val=0; //off the tape
+    if(raw_R_val<=37){
+    normalized_R_val=0;
    }
-   else if(raw_R_val>=60){
-    normalized_R_val=1; //on the tape
+   else if(raw_R_val>37){
+    normalized_R_val=1;
    }
 
    return normalized_R_val;

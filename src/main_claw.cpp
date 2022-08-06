@@ -1,4 +1,4 @@
-
+/*
 #include <Wire.h>
 #include <Adafruit_SSD1306.h>
 #include <NewPing.h>
@@ -198,22 +198,28 @@ void loop() {
   turn_table_motor.set_pwm(3000);
   rack_n_pinion_motor.set_pwm(4000);
 
-  turn_table_motor.go_to_position(-20, display);
-  delay(200);
-  claw_system.grab_large_treasure();
+  display.println(treasure_sonar_right.ping_cm());
+  display.display();
+  if(treasure_sonar_right.ping_cm()<=30){
 
+    turn_table_motor.go_to_position(-20, display);
+    display.println("treasure detected");
+    display.display();
 
+  }
+
+  
 
 
   display.display();
-  delay(5000);
+  delay(1);
  
 
   /*display.display();
   delayMicroseconds(5);*/
   
   
-}
+
 
 
   
