@@ -28,7 +28,7 @@ TapeSensors tpsens;
 #define PWM2_R PB_8
 #define PWM1_R PB_9
 
-EncoderMotor right_motor(ENCA_R, ENCB_R, PWM1_R, PWM2_R, 145, 5);
+EncoderMotor right_motor(ENCA_R, ENCB_R, PWM1_R, PWM2_R);
 
 //LEFT MOTOR
 
@@ -37,7 +37,7 @@ EncoderMotor right_motor(ENCA_R, ENCB_R, PWM1_R, PWM2_R, 145, 5);
 #define PWM2_L PA_8
 #define PWM1_L PA_9
 
-EncoderMotor left_motor(ENCA_L, ENCB_L, PWM1_L, PWM2_L, 145, 5);
+EncoderMotor left_motor(ENCA_L, ENCB_L, PWM1_L, PWM2_L);
 
 
 #define FORWARD 1
@@ -53,14 +53,25 @@ int position_right=0;
 int position_left=0;
 
 #define ENCODER_OFFSET 5
+//motor has 11 clicks per turn before gear ratio. Gear ratio is 131. So 11*131=1441.
+//Counter divides by 10, so 144 clicks per rotation. So 360/144=2.5 degrees per click.
+#define DEG_PER_CLICK_WHEELS 2.5
+#define WHEEL_DIAMTER 6.7 //in cm
 
 void speed_check(float speed_diff);
+void chicken_wire_check();
 
 void read_encoder_right();
 void read_encoder_left();
 
 void go_to_position_right(int pos);
 void go_to_position_left(int pos);
+
+void turn_right_wheel(int degrees, int dir);
+void turn_left_wheel(int degrees, int dir);
+
+void go_distance_right_wheel(int distance, int direction);
+void go_distance_left_wheel(int distance, int direction);
 
 //************************DECLARE GYROSCOPE**********************
 Adafruit_MPU6050 mpu;
@@ -73,8 +84,9 @@ float del=100;
 long previous_time=0;
 long current_time=0;
 
-#define RIGHT 1
-#define LEFT -1
+//convention: ccw (left) is + cw is -
+#define RIGHT -1
+#define LEFT 1
 
 void gyro_setup();
 void gyro_turn(int angle, int direction);
@@ -100,6 +112,7 @@ int read_claw_message();
 int treasures_picked_up = 0;
 
 
+//***************************SETUP*****************************************
 void setup() {
 
   oled_setup();
@@ -142,11 +155,6 @@ void loop(){
     right_motor.go();
     tpsens.read_tape();
 
-    if(tpsens.raw_L_val>200||tpsens.raw_M_val>200||tpsens.raw_R_val>200){ //on chicken wire
-      right_motor.stop();
-      left_motor.stop();
-    }
-
     display.println(tpsens.raw_L_val);
     display.println(tpsens.raw_M_val);
     display.println(tpsens.raw_R_val);
@@ -154,6 +162,7 @@ void loop(){
     display.println(tpsens.position);
     display.println(tpsens.error);
 
+    chicken_wire_check();
     float speed_diff = tpsens.follow_tape_speed_correction();
     speed_check(speed_diff);
 
@@ -217,15 +226,6 @@ void speed_check(float speed_diff){
 
 }
 
-void right_motor_encoder_wrapper(){
-  right_motor.read_encoder();
-}
-
-void left_motor_encoder_wrapper(){
-  left_motor.read_encoder();
-}
-
-
 
 int read_claw_message(){
 
@@ -248,7 +248,7 @@ void gyro_setup(){
       delay(10);
     }
   }
-  //display.println("MPU6050 Found!");
+
   //setupt motion detection
   mpu.setHighPassFilter(MPU6050_HIGHPASS_0_63_HZ);
   mpu.setMotionDetectionThreshold(1);
@@ -469,4 +469,74 @@ void print_in_loop(const char *text){
   display.setCursor(0,0);
   display.println(text);
   display.display();
+}
+
+//the encoders of the wheels operate in opposite directions because the wheels are mounted opposite
+
+void turn_right_wheel(int degrees, int dir){
+    
+  int new_pos=0;
+  int pos_diff = degrees/DEG_PER_CLICK_WHEELS;
+
+  //left (aka cw) is positive position for yellow motors convention: cw is negative ccw is positive
+  //check directions IRL!!!!
+  if(dir==BACKWARD){
+    new_pos=position_right+pos_diff;
+  }
+  else if(dir==FORWARD){
+    new_pos=position_right-pos_diff;
+  }
+  go_to_position_right(new_pos);
+
+}
+
+void turn_left_wheel(int degrees, int dir){
+    
+  int new_pos=0;
+  int pos_diff = degrees/DEG_PER_CLICK_WHEELS;
+
+  //left (aka cw) is positive position for yellow motors convention: cw is negative ccw is positive
+  //check directions IRL!!!!
+  if(dir==FORWARD){
+    new_pos=position_left+pos_diff;
+  }
+  else if(dir==BACKWARD){
+    new_pos=position_left-pos_diff;
+  }
+  go_to_position_left(new_pos);
+
+}
+
+//units are centimeters
+//wheel diameter is 6.7cm
+void go_distance_right_wheel(int distance, int direction){
+
+  //angle = arc length / radius * 180/PI (so that it's in degrees)
+  int angle = (float)distance/(WHEEL_DIAMTER/2.0)*180.0/PI;
+  turn_right_wheel(angle, direction);
+  
+}
+
+void go_distance_left_wheel(int distance, int direction){
+
+  //angle = arc length / radius * 180/PI (so that it's in degrees)
+  int angle = (float)distance/(WHEEL_DIAMTER/2.0)*180.0/PI;
+  turn_left_wheel(angle, direction);
+  
+}
+
+void chicken_wire_check(){
+
+  if(tpsens.raw_L_val>200&&tpsens.raw_M_val>200&&tpsens.raw_R_val>200){ //on chicken wire
+
+    right_motor.stop();
+    left_motor.stop();
+
+    delay(200);
+
+    go_distance_right_wheel(15, FORWARD);
+    go_distance_left_wheel(15, FORWARD);
+
+  }
+
 }
