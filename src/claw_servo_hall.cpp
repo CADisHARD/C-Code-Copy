@@ -13,28 +13,29 @@ int ClawServoHall::grab_treasure(){
     int initial_position = myservo.read();
     while (initial_position > CLAW_HALL){
         myservo.write(initial_position);
-        delay(15);
+        delay(20);
         initial_position--;
     }
     while (initial_position < CLAW_HALL){
         myservo.write(initial_position);
-        delay(15);
+        delay(20);
         initial_position++;
     }
 
     int if_bomb = analogRead(HALL_PIN);
+    delay(500);
     
     if (if_bomb > 50){
         //if not bomb, pick up the treasure, and return 1 to indicate not bomb
         int current_position = myservo.read();
         while (current_position > CLAW_GRAB){
             myservo.write(current_position);
-            delay(15);
+            delay(20);
             current_position--;
         }
         while (current_position < CLAW_GRAB){
             myservo.write(current_position);
-            delay(15);
+            delay(20);
             current_position++;
         }
         return 1;
@@ -51,12 +52,12 @@ void ClawServoHall::grab_large_treasure(){
     int initial_position = myservo.read();
     while (initial_position > CLAW_GRAB){
         myservo.write(initial_position);
-        delay(15);
+        delay(20);
         initial_position--;
     }
     while (initial_position < CLAW_GRAB){
         myservo.write(initial_position);
-        delay(15);
+        delay(20);
         initial_position++;
     }
 }
@@ -75,12 +76,12 @@ void ClawServoHall::release_treasure(){
     int initial_position = myservo.read();
     while (initial_position > CLAW_INITIAL){
         myservo.write(initial_position);
-        delay(15);
+        delay(20);
         initial_position--;
     }
     while (initial_position < CLAW_INITIAL){
         myservo.write(initial_position);
-        delay(15);
+        delay(20);
         initial_position++;
     }
 }
