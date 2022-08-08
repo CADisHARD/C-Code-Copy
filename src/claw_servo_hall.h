@@ -1,7 +1,7 @@
 #ifndef CLAW_SERVO_HALL
 #define CLAW_SERVO_HALL
-#define CLAW_INITIAL 75
-#define CLAW_GRAB 0
+#define CLAW_INITIAL 0
+#define CLAW_GRAB 60
 
 #include "Arduino.h"
 #include "Wire.h"

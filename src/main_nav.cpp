@@ -1,4 +1,4 @@
-#include <SPI.h>
+/*#include <SPI.h>
 #include <Adafruit_GFX.h>
 #include <Wire.h>
 #include <Adafruit_SSD1306.h>
@@ -540,3 +540,5 @@ void chicken_wire_check(){
   }
 
 }
+
+*/

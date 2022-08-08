@@ -24,12 +24,12 @@ void ClawServoHall::grab_treasure(){
     int initial_position = myservo.read();
     while (initial_position > CLAW_GRAB){
         myservo.write(initial_position);
-        delay(10);
+        delay(1);
         initial_position--;
     }
     while (initial_position < CLAW_GRAB){
         myservo.write(initial_position);
-        delay(10);
+        delay(1);
         initial_position++;
     }
 }
@@ -39,12 +39,12 @@ void ClawServoHall::release_treasure(){
     int initial_position = myservo.read();
     while (initial_position > CLAW_INITIAL){
         myservo.write(initial_position);
-        delay(10);
+        delay(1);
         initial_position--;
     }
     while (initial_position < CLAW_INITIAL){
         myservo.write(initial_position);
-        delay(10);
+        delay(1);
         initial_position++;
     }
 }
